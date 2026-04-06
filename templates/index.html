@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lucky Miner Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"></script>
+  <style>
+    :root {
+      --bg: #111;
+      --panel: #1b1b1b;
+      --panel2: #222;
+      --border: #2d2d2d;
+      --fg: #0f0;
+      --fg-soft: #9f9;
+      --fg-dim: #8f8;
+
+      --topbar-h: 78px;
+      --bottombar-h: 72px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      padding: 10px;
+    }
+
+    h3 {
+      color: var(--fg);
+      text-align: center;
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      line-height: 1.1;
+      flex-shrink: 0;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 10px;
+      height: calc(100vh - 20px);
+      height: calc(100dvh - 20px);
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      min-height: 72px;
+      min-width: 0;
+    }
+
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      text-align: center;
+      box-shadow: 0 0 8px rgba(0,255,0,0.06);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .kpi-card.kpi-updated {
+      animation: kpiPulse 0.8s ease;
+      border-color: #7fff7f;
+      box-shadow: 0 0 16px rgba(0,255,0,0.28);
+    }
+
+    .kpi-card.kpi-newhits-burst {
+      animation: kpiBurst 1.2s ease;
+    }
+
+    @keyframes kpiPulse {
+      0%   { transform: scale(1); box-shadow: 0 0 8px rgba(0,255,0,0.06); }
+      30%  { transform: scale(1.03); box-shadow: 0 0 20px rgba(0,255,0,0.35); }
+      100% { transform: scale(1); box-shadow: 0 0 8px rgba(0,255,0,0.06); }
+    }
+
+    @keyframes kpiBurst {
+      0%   { transform: scale(1); }
+      20%  { transform: scale(1.06) rotate(-0.4deg); }
+      45%  { transform: scale(1.02) rotate(0.4deg); }
+      100% { transform: scale(1); }
+    }
+
+    .kpi-title {
+      font-size: 12px;
+      color: var(--fg-dim);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--fg);
+      line-height: 1.1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 0 0 rgba(0,255,0,0);
+      transition: text-shadow 0.25s ease;
+    }
+
+    .kpi-card.kpi-updated .kpi-value {
+      text-shadow: 0 0 10px rgba(0,255,0,0.35);
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      min-height: 40px;
+      min-width: 0;
+    }
+
+    #rangeButtonsDesktop {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    #rangeButtonsDesktop button,
+    .view-tab {
+      background: #222;
+      color: var(--fg);
+      border: 1px solid var(--fg);
+      padding: 5px 11px;
+      margin: 0;
+      cursor: pointer;
+      border-radius: 6px;
+      font-family: monospace;
+      transition: all 0.2s ease;
+      font-size: 12px;
+    }
+
+    #rangeButtonsDesktop button:hover,
+    .view-tab:hover {
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    #rangeButtonsDesktop button.active,
+    .view-tab.active {
+      background: var(--fg);
+      color: var(--bg);
+      font-weight: bold;
+      box-shadow: 0 0 8px var(--fg);
+    }
+
+    #timeRange,
+    #timeRangeDesktop {
+      text-align: center;
+      color: var(--fg-soft);
+      font-size: 13px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60vw;
+      min-width: 0;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 0.95fr 0.42fr 1.95fr;
+      gap: 10px;
+      min-height: 380px;
+      max-height: 380px;
+      min-width: 0;
+    }
+
+    .bottom-row {
+      min-height: 0;
+      height: 100%;
+      min-width: 0;
+    }
+
+    .panel {
+      background: var(--panel2);
+      border-radius: 10px;
+      padding: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+      border: 1px solid transparent;
+    }
+
+    .panel.panel-flash {
+      animation: panelFlash 0.95s ease;
+      border-color: rgba(127,255,127,0.45);
+    }
+
+    @keyframes panelFlash {
+      0%   { box-shadow: 0 0 0 rgba(0,255,0,0); transform: scale(1); }
+      30%  { box-shadow: 0 0 22px rgba(0,255,0,0.22); transform: scale(1.01); }
+      100% { box-shadow: 0 0 0 rgba(0,255,0,0); transform: scale(1); }
+    }
+
+    .table-wrapper,
+    .mini-table-wrapper {
+      overflow: auto;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    table {
+      color: var(--fg);
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13px;
+      min-width: 0;
+    }
+
+    td, th {
+      padding: 4px 7px;
+      border-bottom: 1px solid #333;
+      line-height: 1.15;
+      text-align: left;
+    }
+
+    td:first-child {
+      font-weight: bold;
+      width: 56%;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .recent-hits-panel {
+      min-width: 0;
+    }
+
+    .standalone-hits {
+      height: 100%;
+    }
+
+    .recent-hits-panel table {
+      font-size: 12px;
+    }
+
+    .recent-hits-panel th,
+    .recent-hits-panel td {
+      padding: 4px 6px;
+    }
+
+    .recent-hits-panel td:first-child {
+      width: 42%;
+    }
+
+    .hit-high {
+      color: #afffaf;
+      font-weight: bold;
+    }
+
+    tr.new-hit-row {
+      animation: newHitRow 1.2s ease;
+    }
+
+    @keyframes newHitRow {
+      0% {
+        background: rgba(0,255,0,0.25);
+        transform: translateX(8px);
+      }
+      40% {
+        background: rgba(0,255,0,0.14);
+        transform: translateX(0);
+      }
+      100% {
+        background: transparent;
+        transform: translateX(0);
+      }
+    }
+
+    .mobile-topbar,
+    .mobile-bottombar,
+    .mobile-main {
+      display: none;
+    }
+
+    .mobile-view {
+      display: contents;
+    }
+
+    .mobile-range-select {
+      width: 100%;
+      background: #222;
+      color: var(--fg);
+      border: 1px solid var(--fg);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 13px;
+      outline: none;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    @media (max-width: 1200px) {
+      html, body {
+        overflow: auto;
+      }
+
+      .dashboard {
+        height: auto;
+        min-height: calc(100dvh - 20px);
+      }
+
+      .kpi-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .top-row {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        max-height: none;
+      }
+
+      .bottom-row {
+        min-height: 350px;
+      }
+
+      #timeRange,
+      #timeRangeDesktop {
+        max-width: 100%;
+        white-space: normal;
+      }
+    }
+
+    @media (max-width: 900px) {
+      html, body {
+        overflow: hidden;
+      }
+
+      body {
+        padding: 0;
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-rows: var(--topbar-h) 1fr var(--bottombar-h);
+        gap: 0;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        max-width: 100vw;
+        overflow: hidden;
+      }
+
+      .desktop-only {
+        display: none !important;
+      }
+
+      .mobile-topbar,
+      .mobile-bottombar,
+      .mobile-main {
+        display: flex;
+      }
+
+      .mobile-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #161616;
+        border-bottom: 1px solid #2d2d2d;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 10px;
+        min-height: var(--topbar-h);
+        min-width: 0;
+        width: 100%;
+        max-width: 100vw;
+        overflow: hidden;
+      }
+
+      .mobile-topbar #timeRange {
+        max-width: 100%;
+        width: 100%;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 9px;
+        line-height: 1.1;
+      }
+
+      .mobile-main {
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        max-width: 100vw;
+        overflow: hidden;
+        padding: 8px;
+        display: block;
+      }
+
+      .mobile-view {
+        display: none;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .mobile-view.active {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .mobile-view .panel {
+        height: 100%;
+        min-height: 0;
+        padding: 10px;
+      }
+
+      .mobile-kpis-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+        overflow: auto;
+      }
+
+      .mobile-kpis-grid .kpi-card {
+        min-height: 0;
+        padding: 10px;
+      }
+
+      .mobile-kpis-grid .kpi-title {
+        font-size: 13px;
+      }
+
+      .mobile-kpis-grid .kpi-value {
+        font-size: clamp(20px, 6vw, 28px);
+      }
+
+      .mobile-view table {
+        font-size: 12px;
+      }
+
+      .mobile-view td,
+      .mobile-view th {
+        padding: 5px 6px;
+      }
+
+      .mobile-chart-panel {
+        height: 100%;
+        min-height: 0;
+      }
+
+      .mobile-chart-panel .chart-wrapper {
+        height: 100%;
+        min-height: 0;
+      }
+
+      .mobile-bottombar {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        background: #161616;
+        border-top: 1px solid #2d2d2d;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 4px;
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)) 6px;
+        min-height: var(--bottombar-h);
+        min-width: 0;
+        width: 100%;
+        max-width: 100vw;
+        overflow: hidden;
+      }
+
+      .view-tab {
+        flex: 1;
+        min-width: 0;
+        padding: 8px 4px;
+        font-size: 10px;
+        line-height: 1.15;
+        white-space: normal;
+        text-align: center;
+        border-radius: 8px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      :root {
+        --topbar-h: 88px;
+        --bottombar-h: 60px;
+      }
+
+      .mobile-topbar {
+        padding: 6px 6px 8px 6px;
+        gap: 5px;
+      }
+
+      .mobile-range-select {
+        font-size: 12px;
+        padding: 7px 8px;
+      }
+
+      .mobile-topbar #timeRange {
+        font-size: 9px;
+        line-height: 1.1;
+      }
+
+      .mobile-main {
+        padding: 6px;
+      }
+
+      .mobile-view.active {
+        gap: 6px;
+      }
+
+      .mobile-kpis-grid {
+        gap: 6px;
+      }
+
+      .mobile-kpis-grid .kpi-card {
+        padding: 8px;
+        border-radius: 8px;
+      }
+
+      .mobile-kpis-grid .kpi-title {
+        font-size: 11px;
+        margin-bottom: 3px;
+      }
+
+      .mobile-kpis-grid .kpi-value {
+        font-size: clamp(16px, 5.2vw, 22px);
+      }
+
+      .mobile-view .panel {
+        padding: 8px;
+        border-radius: 8px;
+      }
+
+      .mobile-view h3 {
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      .mobile-view table {
+        font-size: 11px;
+      }
+
+      .mobile-view td,
+      .mobile-view th {
+        padding: 4px 5px;
+      }
+
+      .mobile-view td:first-child {
+        width: 50%;
+      }
+
+      .mobile-bottombar {
+        gap: 3px;
+        padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px)) 4px;
+      }
+
+      .view-tab {
+        padding: 7px 2px;
+        font-size: 9px;
+        line-height: 1.05;
+        border-radius: 7px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+  <!-- MOBILE TOP BAR -->
+  <div class="mobile-topbar">
+    <select id="mobileRangeSelect" class="mobile-range-select">
+      <option value="today" selected>Hoy</option>
+      <option value="7d">Últimos 7 días</option>
+      <option value="1m">Último mes</option>
+      <option value="3m">Últimos 3 meses</option>
+      <option value="6m">Últimos 6 meses</option>
+      <option value="1y">Último año</option>
+      <option value="all">Todo</option>
+    </select>
+    <div id="timeRange">Cargando rango temporal...</div>
+  </div>
+
+  <!-- DESKTOP KPI ROW -->
+  <div class="kpi-row desktop-only">
+    <div class="kpi-card" id="card-kpi-total">
+      <div class="kpi-title">Total ocurrencias</div>
+      <div class="kpi-value" id="kpi-total">-</div>
+    </div>
+    <div class="kpi-card" id="card-kpi-best">
+      <div class="kpi-title">Mejor dificultad</div>
+      <div class="kpi-value" id="kpi-best">-</div>
+    </div>
+    <div class="kpi-card" id="card-kpi-last1m">
+      <div class="kpi-title">Último hit ≥ 1M</div>
+      <div class="kpi-value" id="kpi-last1m">-</div>
+    </div>
+    <div class="kpi-card" id="card-kpi-1g">
+      <div class="kpi-title">Hits ≥ 1G</div>
+      <div class="kpi-value" id="kpi-1g">-</div>
+    </div>
+    <div class="kpi-card" id="card-kpi-hashrate">
+      <div class="kpi-title">Hashrate medio</div>
+      <div class="kpi-value" id="kpi-hashrate">0</div>
+    </div>
+    <div class="kpi-card" id="card-kpi-newhits">
+      <div class="kpi-title">Nuevos desde carga</div>
+      <div class="kpi-value" id="kpi-newhits">0</div>
+    </div>
+  </div>
+
+  <!-- DESKTOP CONTROLS -->
+  <div class="controls-row desktop-only">
+    <div id="rangeButtonsDesktop">
+      <button data-range="today" class="active">Hoy</button>
+      <button data-range="7d">7d</button>
+      <button data-range="1m">1m</button>
+      <button data-range="3m">3m</button>
+      <button data-range="6m">6m</button>
+      <button data-range="1y">1y</button>
+      <button data-range="all">All</button>
+    </div>
+    <div id="timeRangeDesktop">Cargando rango temporal...</div>
+  </div>
+
+  <!-- DESKTOP TOP -->
+  <div class="top-row desktop-only">
+    <div class="panel">
+      <h3>Datos en tiempo real</h3>
+      <div class="table-wrapper">
+        <table id="realtime-table"></table>
+      </div>
+    </div>
+
+    <div class="panel recent-hits-panel" id="recent-hits-panel-desktop">
+      <h3>Últimos hits</h3>
+      <div class="mini-table-wrapper standalone-hits">
+        <table id="recent-hits-table">
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Ocurrencias en el tiempo</h3>
+      <div class="chart-wrapper">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESKTOP BOTTOM -->
+  <div class="panel bottom-row desktop-only">
+    <h3>Distribución de dificultades encontradas</h3>
+    <div class="chart-wrapper">
+      <canvas id="difficultyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- MOBILE MAIN -->
+  <div class="mobile-main">
+
+    <!-- KPIs -->
+    <div class="mobile-view active" data-view="kpis">
+      <div class="mobile-kpis-grid">
+        <div class="kpi-card" id="card-kpi-total-mobile">
+          <div class="kpi-title">Total ocurrencias</div>
+          <div class="kpi-value" id="kpi-total-mobile">-</div>
+        </div>
+        <div class="kpi-card" id="card-kpi-best-mobile">
+          <div class="kpi-title">Mejor dificultad</div>
+          <div class="kpi-value" id="kpi-best-mobile">-</div>
+        </div>
+        <div class="kpi-card" id="card-kpi-last1m-mobile">
+          <div class="kpi-title">Último hit ≥ 1M</div>
+          <div class="kpi-value" id="kpi-last1m-mobile">-</div>
+        </div>
+        <div class="kpi-card" id="card-kpi-1g-mobile">
+          <div class="kpi-title">Hits ≥ 1G</div>
+          <div class="kpi-value" id="kpi-1g-mobile">-</div>
+        </div>
+        <div class="kpi-card" id="card-kpi-hashrate-mobile">
+          <div class="kpi-title">Hashrate medio</div>
+          <div class="kpi-value" id="kpi-hashrate-mobile">0</div>
+        </div>
+        <div class="kpi-card" id="card-kpi-newhits-mobile">
+          <div class="kpi-title">Nuevos desde carga</div>
+          <div class="kpi-value" id="kpi-newhits-mobile">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REALTIME -->
+    <div class="mobile-view" data-view="realtime">
+      <div class="panel">
+        <h3>Datos en tiempo real</h3>
+        <div class="table-wrapper">
+          <table id="realtime-table-mobile"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT HITS -->
+    <div class="mobile-view" data-view="recent">
+      <div class="panel recent-hits-panel" id="recent-hits-panel-mobile">
+        <h3>Últimos hits</h3>
+        <div class="mini-table-wrapper standalone-hits">
+          <table id="recent-hits-table-mobile">
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="mobile-view" data-view="timeline">
+      <div class="panel mobile-chart-panel">
+        <h3>Ocurrencias en el tiempo</h3>
+        <div class="chart-wrapper">
+          <canvas id="timelineChartMobile"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUTION -->
+    <div class="mobile-view" data-view="distribution">
+      <div class="panel mobile-chart-panel">
+        <h3>Distribución de dificultades encontradas</h3>
+        <div class="chart-wrapper">
+          <canvas id="difficultyChartMobile"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM BAR -->
+  <div class="mobile-bottombar">
+    <button class="view-tab active" data-view="kpis">KPIs</button>
+    <button class="view-tab" data-view="realtime">Sesión</button>
+    <button class="view-tab" data-view="recent">Hits</button>
+    <button class="view-tab" data-view="timeline">Tiempo</button>
+    <button class="view-tab" data-view="distribution">Dist</button>
+  </div>
+
+</div>
+
+<script>
+/* =========================
+   CONFIG
+========================= */
+const fieldsToShow = [
+  "Best diff",
+  "Best diff ever",
+  "Current session",
+  "Hashrate",
+  "Last diff",
+  "Pool",
+  "Pool diff",
+  "Power",
+  "Reported Hashrate",
+  "Shares",
+  "Temp",
+  "Total shares",
+  "Uptime"
+];
+
+const difficultyRanges = [
+  { label: "≥ 1T", min: 1e12 },
+  { label: "≥ 100G", min: 1e11 },
+  { label: "≥ 10G", min: 1e10 },
+  { label: "≥ 1G", min: 1e9 },
+  { label: "≥ 100M", min: 1e8 },
+  { label: "≥ 10M", min: 1e7 },
+  { label: "≥ 1M", min: 1e6 },
+  { label: "≥ 100K", min: 1e5 },
+  { label: "≥ 10K", min: 1e4 }
+];
+
+const MAX_HISTORY_ITEMS = 500000;
+const REALTIME_REFRESH_MS = 10000;
+const HISTORY_REFRESH_MS = 30000;
+
+/* IndexedDB */
+const DB_NAME = "lucky_miner_dashboard";
+const DB_VERSION = 1;
+const STORE_NAME = "kv";
+const CACHE_KEY = "history_cache";
+
+/* =========================
+   STATE
+========================= */
+let difficultyChart = null;
+let difficultyChartMobile = null;
+let timelineChart = null;
+let timelineChartMobile = null;
+
+let allData = [];
+let currentRange = "today";
+let lastHistoryTimestamp = null;
+let newHitsSinceLoad = 0;
+let isInitialHistoryLoaded = false;
+const seenHistoryKeys = new Set();
+
+/* CountUp state */
+const countUpInstances = {};
+const countUpRawValues = {};
+
+/* =========================
+   INDEXEDDB
+========================= */
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error("IndexedDB no soportado"));
+      return;
+    }
+
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = function(event) {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "key" });
+      }
+    };
+
+    request.onsuccess = function() {
+      resolve(request.result);
+    };
+
+    request.onerror = function() {
+      reject(request.error);
+    };
+  });
+}
+
+async function saveHistoryCache() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+
+    store.put({
+      key: CACHE_KEY,
+      savedAt: Date.now(),
+      lastHistoryTimestamp,
+      allData
+    });
+
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+
+    db.close();
+  } catch (e) {
+    console.warn("No se pudo guardar cache IndexedDB:", e);
+  }
+}
+
+async function loadHistoryCache() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(CACHE_KEY);
+
+    const result = await new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    db.close();
+
+    if (!result || !Array.isArray(result.allData)) return null;
+    return result;
+  } catch (e) {
+    console.warn("No se pudo leer cache IndexedDB:", e);
+    return null;
+  }
+}
+
+async function clearHistoryCache() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    store.delete(CACHE_KEY);
+
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+
+    db.close();
+  } catch (e) {
+    console.warn("No se pudo limpiar cache IndexedDB:", e);
+  }
+}
+
+/* =========================
+   UTILS
+========================= */
+function tsToDate(ts) {
+  return new Date(ts * 1000);
+}
+
+function nowUnix() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function formatDifficulty(value) {
+  if (value >= 1e12) return (value / 1e12).toFixed(2).replace(/\.00$/, '') + "T";
+  if (value >= 1e9) return (value / 1e9).toFixed(2).replace(/\.00$/, '') + "G";
+  if (value >= 1e6) return (value / 1e6).toFixed(2).replace(/\.00$/, '') + "M";
+  if (value >= 1e3) return (value / 1e3).toFixed(2).replace(/\.00$/, '') + "K";
+  return value.toString();
+}
+
+function formatHashrate(value) {
+  if (value >= 1e12) return (value / 1e12).toFixed(2).replace(/\.00$/, '') + "TH/s";
+  if (value >= 1e9) return (value / 1e9).toFixed(2).replace(/\.00$/, '') + "GH/s";
+  if (value >= 1e6) return (value / 1e6).toFixed(2).replace(/\.00$/, '') + "MH/s";
+  if (value >= 1e3) return (value / 1e3).toFixed(2).replace(/\.00$/, '') + "KH/s";
+  return value.toString();
+}
+
+function formatRelativeTime(timestamp) {
+  if (!timestamp) return "-";
+
+  const diffSec = nowUnix() - timestamp;
+  const days = Math.floor(diffSec / 86400);
+  const hours = Math.floor(diffSec / 3600);
+  const mins = Math.floor(diffSec / 60);
+
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  if (mins > 0) return `${mins}m`;
+  return "Ahora";
+}
+
+function formatCompactDateTime(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function setTimeRangeText(valueDesktop, valueMobile = null) {
+  const mobile = document.getElementById("timeRange");
+  const desktop = document.getElementById("timeRangeDesktop");
+
+  if (mobile) mobile.textContent = valueMobile ?? valueDesktop;
+  if (desktop) desktop.textContent = valueDesktop;
+}
+
+function syncRangeButtons(range) {
+  document.querySelectorAll('#rangeButtonsDesktop [data-range]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.range === range);
+  });
+
+  const mobileSelect = document.getElementById('mobileRangeSelect');
+  if (mobileSelect) {
+    mobileSelect.value = range;
+  }
+}
+
+function setMobileView(viewName) {
+  document.querySelectorAll('.mobile-view').forEach(view => {
+    view.classList.toggle('active', view.dataset.view === viewName);
+  });
+
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.view === viewName);
+  });
+
+  setTimeout(() => {
+    if (timelineChart) timelineChart.resize();
+    if (timelineChartMobile) timelineChartMobile.resize();
+    if (difficultyChart) difficultyChart.resize();
+    if (difficultyChartMobile) difficultyChartMobile.resize();
+  }, 80);
+}
+
+function normalizeHistoryItem(item) {
+  if (!item) return null;
+
+  const t = Number(item.t);
+  const d = Number(item.d);
+
+  if (!Number.isFinite(t) || !Number.isFinite(d)) return null;
+
+  return { t, d };
+}
+
+function getItemKey(item) {
+  return `${item.t}_${item.d}`;
+}
+
+function rebuildSeenKeys() {
+  seenHistoryKeys.clear();
+  for (const item of allData) {
+    seenHistoryKeys.add(getItemKey(item));
+  }
+}
+
+function sortAllData() {
+  allData.sort((a, b) => a.t - b.t);
+  lastHistoryTimestamp = allData.length ? allData[allData.length - 1].t : null;
+}
+
+function trimHistoryIfNeeded() {
+  if (allData.length <= MAX_HISTORY_ITEMS) return;
+
+  const toRemove = allData.length - MAX_HISTORY_ITEMS;
+  const removed = allData.splice(0, toRemove);
+
+  for (const item of removed) {
+    seenHistoryKeys.delete(getItemKey(item));
+  }
+}
+
+function animateElementClass(el, className, duration = 900) {
+  if (!el) return;
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+  setTimeout(() => el.classList.remove(className), duration);
+}
+
+function flashNewHitUI() {
+  animateElementClass(document.getElementById('card-kpi-newhits'), 'kpi-newhits-burst', 1200);
+  animateElementClass(document.getElementById('card-kpi-newhits-mobile'), 'kpi-newhits-burst', 1200);
+
+  animateElementClass(document.getElementById('recent-hits-panel-desktop'), 'panel-flash', 950);
+  animateElementClass(document.getElementById('recent-hits-panel-mobile'), 'panel-flash', 950);
+}
+
+/* =========================
+   COUNTUP HELPERS
+========================= */
+function getKpiCardId(elementId) {
+  if (elementId.endsWith('-mobile')) {
+    return `card-${elementId}`;
+  }
+  return `card-${elementId}`;
+}
+
+function markKpiUpdated(elementId) {
+  const card = document.getElementById(getKpiCardId(elementId));
+  animateElementClass(card, 'kpi-updated', 800);
+}
+
+function setTextBothStatic(desktopId, mobileId, value, animate = false) {
+  const desktopEl = document.getElementById(desktopId);
+  const mobileEl = document.getElementById(mobileId);
+
+  const prevDesktop = desktopEl ? desktopEl.textContent : null;
+  const prevMobile = mobileEl ? mobileEl.textContent : null;
+
+  if (desktopEl) desktopEl.textContent = value;
+  if (mobileEl) mobileEl.textContent = value;
+
+  if (animate && (prevDesktop !== value || prevMobile !== value)) {
+    markKpiUpdated(desktopId);
+    markKpiUpdated(mobileId);
+  }
+}
+
+function animateCountUpElement(elementId, endValue, options = {}) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const {
+    duration = 0.8,
+    decimals = 0,
+    suffix = '',
+    prefix = '',
+    separator = ',',
+    decimal = '.',
+    useEasing = true,
+    smartEasingThreshold = 999,
+    formattingFn = null
+  } = options;
+
+  const prev = Number.isFinite(countUpRawValues[elementId]) ? countUpRawValues[elementId] : 0;
+  countUpRawValues[elementId] = endValue;
+
+  const changed = prev !== endValue;
+  const CountUpClass = window.countUp?.CountUp;
+
+  if (typeof CountUpClass === 'undefined') {
+    console.log("CountUp undefined!")
+    el.textContent = formattingFn ? formattingFn(endValue) : `${prefix}${endValue}${suffix}`;
+    if (changed) markKpiUpdated(elementId);
+    return;
+  }
+
+  if (!countUpInstances[elementId]) {
+    countUpInstances[elementId] = new CountUp(elementId, endValue, {
+      startVal: prev,
+      duration,
+      decimalPlaces: decimals,
+      suffix,
+      prefix,
+      separator,
+      decimal,
+      useEasing,
+      smartEasingThreshold,
+      formattingFn
+    });
+    countUpInstances[elementId].start();
+  } else {
+    countUpInstances[elementId].options = {
+      ...countUpInstances[elementId].options,
+      duration,
+      decimalPlaces: decimals,
+      suffix,
+      prefix,
+      separator,
+      decimal,
+      useEasing,
+      smartEasingThreshold,
+      formattingFn
+    };
+    countUpInstances[elementId].update(endValue);
+  }
+
+  if (changed) markKpiUpdated(elementId);
+}
+
+function animateCountUpBoth(desktopId, mobileId, endValue, options = {}) {
+  animateCountUpElement(desktopId, endValue, options);
+  animateCountUpElement(mobileId, endValue, options);
+}
+
+function formatSuffixNumber(value, suffixes) {
+  for (const s of suffixes) {
+    if (value >= s.min) {
+      return {
+        scaled: value / s.min,
+        suffix: s.suffix
+      };
+    }
+  }
+  return { scaled: value, suffix: '' };
+}
+
+/* =========================
+   HISTORY MERGE
+========================= */
+async function mergeHistoryData(newItems, countAsNewHits = false, persist = true) {
+  let added = 0;
+
+  for (const raw of newItems) {
+    const item = normalizeHistoryItem(raw);
+    if (!item) continue;
+
+    const key = getItemKey(item);
+    if (seenHistoryKeys.has(key)) continue;
+
+    seenHistoryKeys.add(key);
+    allData.push(item);
+    added++;
+  }
+
+  if (added > 0) {
+    sortAllData();
+    trimHistoryIfNeeded();
+
+    if (countAsNewHits) {
+      newHitsSinceLoad += added;
+      animateCountUpBoth("kpi-newhits", "kpi-newhits-mobile", newHitsSinceLoad, {
+        duration: 0.9,
+        decimals: 0,
+        separator: ','
+      });
+      flashNewHitUI();
+    }
+
+    if (persist) {
+      await saveHistoryCache();
+    }
+  }
+
+  return added;
+}
+
+function generarMockData() {
+  const data = [];
+  const nowSec = nowUnix();
+
+  for (let i = 0; i < 500; i++) {
+    const t = nowSec - Math.floor(Math.random() * 365 * 24 * 60 * 60);
+
+    const rand = Math.random();
+    let d;
+
+    if (rand > 0.985) d = 1e12;
+    else if (rand > 0.96) d = 1e11;
+    else if (rand > 0.90) d = 1e10;
+    else if (rand > 0.80) d = 1e9;
+    else if (rand > 0.68) d = 1e8;
+    else if (rand > 0.52) d = 1e7;
+    else if (rand > 0.35) d = 1e6;
+    else if (rand > 0.18) d = 1e5;
+    else d = 1e4;
+
+    data.push({ t, d });
+  }
+
+  return data.sort((a, b) => a.t - b.t);
+}
+
+/* =========================
+   REALTIME TABLE
+========================= */
+async function actualizarTiempoReal() {
+  try {
+    const res = await fetch('/data');
+    const data = await res.json();
+    renderRealtimeTable(data);
+  } catch (e) {
+    const mockRealtime = {
+      "Best diff": "1.23G",
+      "Best diff ever": "102.5G",
+      "Current session": "4h 32m",
+      "Hashrate": "1.87 TH/s",
+      "Last diff": "15.4M",
+      "Pool": "CKPool",
+      "Pool diff": "256K",
+      "Power": "18.2W",
+      "Reported Hashrate": "1.79 TH/s",
+      "Shares": "184",
+      "Temp": "54°C",
+      "Total shares": "12,345",
+      "Uptime": "6d 14h"
+    };
+    renderRealtimeTable(mockRealtime);
+  }
+}
+
+function renderRealtimeTable(data) {
+  const renderInto = (tableId, fields) => {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    table.innerHTML = "";
+
+    fields.forEach(field => {
+      const tr = document.createElement('tr');
+      const tdKey = document.createElement('td');
+      tdKey.textContent = field;
+
+      const tdValue = document.createElement('td');
+      tdValue.textContent = data[field] ?? "-";
+
+      tr.appendChild(tdKey);
+      tr.appendChild(tdValue);
+      table.appendChild(tr);
+    });
+  };
+
+  renderInto('realtime-table', fieldsToShow);
+  renderInto('realtime-table-mobile', fieldsToShow);
+}
+
+/* =========================
+   HISTORY FETCH
+========================= */
+async function restoreFromCacheIfPossible() {
+  const cache = await loadHistoryCache();
+  if (!cache) return false;
+
+  const restored = Array.isArray(cache.allData)
+    ? cache.allData.map(normalizeHistoryItem).filter(Boolean)
+    : [];
+
+  if (restored.length === 0) {
+    await clearHistoryCache();
+    return false;
+  }
+
+  allData = restored;
+  sortAllData();
+  rebuildSeenKeys();
+
+  newHitsSinceLoad = 0;
+  animateCountUpBoth("kpi-newhits", "kpi-newhits-mobile", 0, { duration: 0.2 });
+
+  isInitialHistoryLoaded = true;
+  aplicarRango(currentRange);
+
+  console.log(`Cache restaurada: ${allData.length} hits`);
+  return true;
+}
+
+async function cargarEstadisticasIniciales() {
+  let data;
+
+  try {
+    const res = await fetch('/history');
+    data = await res.json();
+  } catch (e) {
+    console.warn("Usando datos mock para /history");
+    data = generarMockData();
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    data = generarMockData();
+  }
+
+  allData = [];
+  seenHistoryKeys.clear();
+  newHitsSinceLoad = 0;
+  animateCountUpBoth("kpi-newhits", "kpi-newhits-mobile", 0, { duration: 0.2 });
+
+  await mergeHistoryData(data, false, true);
+  isInitialHistoryLoaded = true;
+
+  aplicarRango(currentRange);
+}
+
+async function actualizarEstadisticasIncremental() {
+  if (!isInitialHistoryLoaded || !lastHistoryTimestamp) {
+    await cargarEstadisticasIniciales();
+    return;
+  }
+
+  try {
+    const res = await fetch(`/history?t=${lastHistoryTimestamp}`);
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0){
+      renderRecentHitsTable(0);
+      const filtered = filtrarDatosPorRango(currentRange);
+      actualizarKPIs(filtered);
+      return;
+    }
+
+    const added = await mergeHistoryData(data, true, true);
+
+    if (added > 0) {
+      aplicarRango(currentRange, Math.min(added, 14));
+    }
+  } catch (e) {
+    console.warn("No se pudo actualizar /history incrementalmente:", e);
+  }
+}
+
+/* =========================
+   FILTERING
+========================= */
+function filtrarDatosPorRango(range) {
+  if (range === "all") return allData;
+
+  const now = new Date();
+  let fromDate = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0 = enero
+  const day = now.getDate();
+
+  switch(range) {
+    case "today":
+      fromDate = new Date(year, month, day, 0, 0, 0, 0);
+      break;
+    case "7d":
+      fromDate = new Date(year, month, day - 7, 0, 0, 0, 0);
+      break;
+    case "1m":
+      fromDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
+      break;
+    case "3m":
+      fromDate = new Date(year, month - 3, 1, 0, 0, 0, 0);
+      break;
+    case "6m":
+      fromDate = new Date(year, month - 6, 1, 0, 0, 0, 0);
+      break;
+    case "1y":
+      fromDate = new Date(year - 1, 0, 1, 0, 0, 0, 0);
+      break;
+  }
+
+  const fromTs = Math.floor(fromDate.getTime() / 1000);
+  return allData.filter(d => d.t >= fromTs);
+}
+
+/* =========================
+   KPIs + RECENT HITS
+========================= */
+function actualizarKPIs(filteredData, newData = false) {
+  const total = filteredData.length;
+
+  let best = -Infinity;
+  let hits1G = 0;
+  let last1MTime = null;
+  let firstTimestamp = null;
+  let lastTimestamp = null;
+
+  for (const item of filteredData) {
+    const diff = item.d;
+    const time = item.t;
+
+    if (!firstTimestamp) firstTimestamp = time;
+    lastTimestamp = time;
+
+    if (diff > best) best = diff;
+    if (diff >= 1e9) hits1G++;
+
+    if (diff >= 1e6 && (!last1MTime || time > last1MTime)) {
+      last1MTime = time;
+    }
+  }
+
+  setTextBothStatic("kpi-last1m", "kpi-last1m-mobile", last1MTime ? formatRelativeTime(last1MTime) : "-", true);
+
+  if ( newData){
+    let hashrate = null;
+    if (lastTimestamp && firstTimestamp && lastTimestamp > firstTimestamp) {
+      hashrate = 10000 * 2**32 * filteredData.length / (lastTimestamp - firstTimestamp);
+    }
+
+    animateCountUpBoth("kpi-total", "kpi-total-mobile", total, {
+      duration: 0.8,
+      decimals: 0,
+      separator: ','
+    });
+
+    if (best > -Infinity) {
+      const bestFmt = formatSuffixNumber(best, [
+        { min: 1e12, suffix: 'T' },
+        { min: 1e9, suffix: 'G' },
+        { min: 1e6, suffix: 'M' },
+        { min: 1e3, suffix: 'K' }
+      ]);
+
+      animateCountUpBoth("kpi-best", "kpi-best-mobile", bestFmt.scaled.toFixed(2), {
+        duration: 0.9,
+        decimals: 2,
+        suffix: bestFmt.suffix,
+        separator: ','
+      });
+    } else {
+      setTextBothStatic("kpi-best", "kpi-best-mobile", "-", true);
+    }
+
+    animateCountUpBoth("kpi-1g", "kpi-1g-mobile", hits1G, {
+      duration: 0.8,
+      decimals: 0,
+      separator: ','
+    });
+
+    if (hashrate) {
+      const hrFmt = formatSuffixNumber(hashrate, [
+        { min: 1e12, suffix: 'TH/s' },
+        { min: 1e9, suffix: 'GH/s' },
+        { min: 1e6, suffix: 'MH/s' },
+        { min: 1e3, suffix: 'KH/s' }
+      ]);
+
+      animateCountUpBoth("kpi-hashrate", "kpi-hashrate-mobile", hrFmt.scaled.toFixed(2), {
+        duration: 1.0,
+        decimals: 2,
+        suffix: hrFmt.suffix,
+        separator: ','
+      });
+    } else {
+      setTextBothStatic("kpi-hashrate", "kpi-hashrate-mobile", "-", true);
+    }
+		
+}
+
+function renderRecentHitsTable(newRowsCount = 0) {
+  const renderInto = (selector) => {
+    const tbody = document.querySelector(selector);
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    const recent = allData.slice(-14).reverse();
+
+    for (let i = 0; i < recent.length; i++) {
+      const item = recent[i];
+      const tr = document.createElement('tr');
+
+      if (i < newRowsCount) {
+        tr.classList.add('new-hit-row');
+      }
+
+      const tdTime = document.createElement('td');
+      tdTime.textContent = formatRelativeTime(item.t);
+
+      const tdDiff = document.createElement('td');
+      tdDiff.textContent = formatDifficulty(item.d);
+
+      if (item.d >= 1e9) tdDiff.classList.add('hit-high');
+
+      tr.appendChild(tdTime);
+      tr.appendChild(tdDiff);
+      tbody.appendChild(tr);
+    }
+  };
+
+  renderInto('#recent-hits-table tbody');
+  renderInto('#recent-hits-table-mobile tbody');
+}
+
+/* =========================
+   RANGE APPLY
+========================= */
+function aplicarRango(range, newRowsCount = 0) {
+  currentRange = range;
+  syncRangeButtons(range);
+
+  const filtered = filtrarDatosPorRango(range);
+
+  if (filtered.length === 0) {
+    setTimeRangeText("No hay datos para ese rango temporal.", "Sin datos");
+    actualizarKPIs([]);
+    renderRecentHitsTable(0);
+    updateDifficultyChart([]);
+    updateTimelineChart([]);
+    return;
+  }
+
+  actualizarKPIs(filtered, true);
+  renderRecentHitsTable(newRowsCount);
+  renderCharts(filtered);
+}
+
+/* =========================
+   BUCKETING ADAPTATIVO
+========================= */
+function getBucketFormat(range, dataLength) {
+  switch(range) {
+    case "today":
+      return "YYYY-MM-DD HH:00";
+    case "7d":
+      return dataLength > 5000 ? "YYYY-MM-DD" : "YYYY-MM-DD HH:00";
+    case "1m":
+      return dataLength > 15000 ? "YYYY-[W]WW" : "YYYY-MM-DD";
+    case "3m":
+      return dataLength > 20000 ? "YYYY-[W]WW" : "YYYY-MM-DD";
+    case "6m":
+      return dataLength > 30000 ? "YYYY-MM" : "YYYY-[W]WW";
+    case "1y":
+      return dataLength > 40000 ? "YYYY-MM" : "YYYY-[W]WW";
+    case "all":
+      if (dataLength < 2000) return "YYYY-MM-DD";
+      if (dataLength < 20000) return "YYYY-[W]WW";
+      return "YYYY-MM";
+    default:
+      return "YYYY-MM-DD";
+  }
+}
+
+function getBucketLabelDescription(format) {
+  switch (format) {
+    case "YYYY-MM-DD HH:00": return "agrupado por hora";
+    case "YYYY-MM-DD": return "agrupado por día";
+    case "YYYY-[W]WW": return "agrupado por semana";
+    case "YYYY-MM": return "agrupado por mes";
+    default: return "";
+  }
+}
+
+function buildDifficultyCounts(filteredData) {
+  const counts = new Array(difficultyRanges.length).fill(0);
+
+  for (const item of filteredData) {
+    const diff = item.d;
+
+    for (let i = 0; i < difficultyRanges.length; i++) {
+      if (diff >= difficultyRanges[i].min) {
+        counts[i]++;
+        break;
+      }
+    }
+  }
+
+  return counts;
+}
+
+function buildTimelineBuckets(filteredData) {
+  const bucketFormat = getBucketFormat(currentRange, filteredData.length);
+  const buckets = {};
+
+  for (const item of filteredData) {
+    const key = moment.unix(item.t).format(bucketFormat);
+    buckets[key] = (buckets[key] || 0) + 1;
+  }
+
+  const labels = Object.keys(buckets).sort();
+  const values = labels.map(label => buckets[label]);
+
+  return {
+    labels,
+    values,
+    bucketFormat
+  };
+}
+
+/* =========================
+   CHARTS
+========================= */
+function createDifficultyChart(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+
+  const ctx = canvas.getContext('2d');
+
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: difficultyRanges.map(r => r.label),
+      datasets: [{
+        label: 'Número de dificultades',
+        data: [],
+        backgroundColor: 'lime',
+        borderColor: 'green',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 8 } },
+      scales: {
+        y: {
+          type: 'logarithmic',
+          beginAtZero: false,
+          ticks: {
+            color: 'lime',
+            font: { size: 11 },
+            callback: function(value) {
+              const allowed = [1, 10, 100, 1000, 10000, 100000, 1000000];
+              return allowed.includes(value) ? value.toLocaleString() : null;
+            }
+          },
+          title: {
+            display: true,
+            text: 'Cantidad',
+            color: 'lime',
+            font: { size: 12 }
+          }
+        },
+        x: {
+          ticks: {
+            color: 'lime',
+            font: { size: 11 }
+          },
+          title: {
+            display: true,
+            text: 'Rangos de dificultad',
+            color: 'lime',
+            font: { size: 12 }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: 'lime', font: { size: 11 } }
+        },
+        datalabels: {
+          color: 'lime',
+          anchor: 'end',
+          align: 'top',
+          font: { weight: 'bold', size: 10 },
+          formatter: value => value > 0 ? value : ''
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function updateDifficultyChart(filteredData) {
+  if (!difficultyChart) difficultyChart = createDifficultyChart('difficultyChart');
+  if (!difficultyChartMobile) difficultyChartMobile = createDifficultyChart('difficultyChartMobile');
+
+  const counts = buildDifficultyCounts(filteredData);
+
+  if (difficultyChart) {
+    difficultyChart.data.datasets[0].data = counts;
+    difficultyChart.update('none');
+  }
+
+  if (difficultyChartMobile) {
+    difficultyChartMobile.data.datasets[0].data = counts;
+    difficultyChartMobile.update('none');
+  }
+}
+
+function createTimelineChart(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+
+  const ctx = canvas.getContext('2d');
+
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Ocurrencias',
+        data: [],
+        borderColor: 'lime',
+        backgroundColor: 'rgba(0,255,0,0.15)',
+        tension: 0.25,
+        fill: true,
+        pointRadius: 2.5,
+        pointHoverRadius: 4
+      }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: 'lime',
+            font: { size: 11 }
+          },
+          title: {
+            display: true,
+            text: 'Ocurrencias',
+            color: 'lime',
+            font: { size: 12 }
+          }
+        },
+        x: {
+          ticks: {
+            color: 'lime',
+            font: { size: 10 },
+            maxRotation: 40,
+            minRotation: 15,
+            autoSkip: true,
+            maxTicksLimit: 18
+          },
+          title: {
+            display: true,
+            text: 'Tiempo',
+            color: 'lime',
+            font: { size: 12 }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: 'lime', font: { size: 11 } }
+        },
+        datalabels: { display: false }
+      }
+    }
+  });
+}
+
+function updateTimelineChart(filteredData) {
+  if (!timelineChart) timelineChart = createTimelineChart('timelineChart');
+  if (!timelineChartMobile) timelineChartMobile = createTimelineChart('timelineChartMobile');
+
+  const { labels, values, bucketFormat } = buildTimelineBuckets(filteredData);
+
+  if (timelineChart) {
+    timelineChart.data.labels = labels;
+    timelineChart.data.datasets[0].data = values;
+    timelineChart.options.scales.x.title.text = `Tiempo (${getBucketLabelDescription(bucketFormat)})`;
+    timelineChart.update('none');
+  }
+
+  if (timelineChartMobile) {
+    timelineChartMobile.data.labels = labels;
+    timelineChartMobile.data.datasets[0].data = values;
+    timelineChartMobile.options.scales.x.title.text = `Tiempo (${getBucketLabelDescription(bucketFormat)})`;
+    timelineChartMobile.update('none');
+  }
+}
+
+function renderCharts(filteredData) {
+  updateDifficultyChart(filteredData);
+  updateTimelineChart(filteredData);
+
+  const firstTime = tsToDate(filteredData[0].t);
+  const lastTime = tsToDate(filteredData[filteredData.length - 1].t);
+
+  const desktopOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+
+  const desktopText =
+    `Datos desde ${firstTime.toLocaleString(undefined, desktopOptions)} hasta ${lastTime.toLocaleString(undefined, desktopOptions)} · ${filteredData.length} ocurrencias`;
+
+  const mobileText =
+    `${formatCompactDateTime(firstTime)} - ${formatCompactDateTime(lastTime)} - ${filteredData.length} hits`;
+
+  setTimeRangeText(desktopText, mobileText);
+}
+
+/* =========================
+   INIT
+========================= */
+document.querySelectorAll('#rangeButtonsDesktop [data-range]').forEach(button => {
+  button.addEventListener('click', () => {
+    aplicarRango(button.dataset.range);
+  });
+});
+
+document.getElementById('mobileRangeSelect').addEventListener('change', (e) => {
+  aplicarRango(e.target.value);
+});
+
+document.querySelectorAll('.view-tab').forEach(button => {
+  button.addEventListener('click', () => {
+    setMobileView(button.dataset.view);
+  });
+});
+
+window.addEventListener('resize', () => {
+  setTimeout(() => {
+    if (timelineChart) timelineChart.resize();
+    if (timelineChartMobile) timelineChartMobile.resize();
+    if (difficultyChart) difficultyChart.resize();
+    if (difficultyChartMobile) difficultyChartMobile.resize();
+  }, 100);
+});
+
+async function initDashboard() {
+  syncRangeButtons(currentRange);
+  setMobileView('kpis');
+
+  actualizarTiempoReal();
+
+  const restored = await restoreFromCacheIfPossible();
+
+  if (restored) {
+    actualizarEstadisticasIncremental();
+  } else {
+    await cargarEstadisticasIniciales();
+  }
+
+  setInterval(actualizarTiempoReal, REALTIME_REFRESH_MS);
+  setInterval(actualizarEstadisticasIncremental, HISTORY_REFRESH_MS);
+}
+
+initDashboard();
+</script>
+
+</body>
+</html>
+
