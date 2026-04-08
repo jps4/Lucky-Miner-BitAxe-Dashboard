@@ -439,6 +439,13 @@
         overflow: hidden;
         padding: 8px;
         display: block;
+        position: relative;
+        touch-action: pan-y;
+        user-select: none;
+      }
+
+      .mobile-main.swiping {
+        cursor: grabbing;
       }
 
       .mobile-view {
@@ -448,12 +455,37 @@
         min-width: 0;
         width: 100%;
         overflow: hidden;
+        opacity: 0;
+        transform: translateX(16px);
+        transition: opacity 0.22s ease, transform 0.22s ease;
       }
 
       .mobile-view.active {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .mobile-view.swipe-out-left {
+        opacity: 0;
+        transform: translateX(-28px);
+      }
+
+      .mobile-view.swipe-out-right {
+        opacity: 0;
+        transform: translateX(28px);
+      }
+
+      .mobile-view.swipe-in-left {
+        opacity: 0;
+        transform: translateX(28px);
+      }
+
+      .mobile-view.swipe-in-right {
+        opacity: 0;
+        transform: translateX(-28px);
       }
 
       .mobile-view .panel {
@@ -680,7 +712,7 @@
   <!-- DESKTOP TOP -->
   <div class="top-row desktop-only">
     <div class="panel">
-      <h3>Datos en tiempo real</h3>
+      <h3>Sesión actual</h3>
       <div class="table-wrapper">
         <table id="realtime-table"></table>
       </div>
@@ -712,7 +744,7 @@
   </div>
 
   <!-- MOBILE MAIN -->
-  <div class="mobile-main">
+  <div class="mobile-main" id="mobileMain">
 
     <!-- KPIs -->
     <div class="mobile-view active" data-view="kpis">
@@ -747,7 +779,7 @@
     <!-- REALTIME -->
     <div class="mobile-view" data-view="realtime">
       <div class="panel">
-        <h3>Datos en tiempo real</h3>
+        <h3>Sesión actual</h3>
         <div class="table-wrapper">
           <table id="realtime-table-mobile"></table>
         </div>
@@ -833,6 +865,9 @@ const difficultyRanges = [
 const MAX_HISTORY_ITEMS = 500000;
 const REALTIME_REFRESH_MS = 10000;
 const HISTORY_REFRESH_MS = 30000;
+const MOBILE_VIEWS = ['kpis', 'realtime', 'recent', 'timeline', 'distribution'];
+const SWIPE_THRESHOLD = 55;
+const SWIPE_MAX_VERTICAL = 50;
 
 /* IndexedDB */
 const DB_NAME = "lucky_miner_dashboard";
@@ -858,6 +893,13 @@ const seenHistoryKeys = new Set();
 /* CountUp state */
 const countUpInstances = {};
 const countUpRawValues = {};
+
+/* Mobile swipe state */
+let currentMobileView = 'kpis';
+let touchStartX = 0;
+let touchStartY = 0;
+let touchActive = false;
+let swipeLocked = false;
 
 /* =========================
    INDEXEDDB
@@ -1019,21 +1061,72 @@ function syncRangeButtons(range) {
   }
 }
 
-function setMobileView(viewName) {
-  document.querySelectorAll('.mobile-view').forEach(view => {
-    view.classList.toggle('active', view.dataset.view === viewName);
-  });
+function setMobileView(viewName, direction = 0) {
+  currentMobileView = viewName;
 
-  document.querySelectorAll('.view-tab').forEach(tab => {
+  const views = document.querySelectorAll('.mobile-view');
+  const tabs = document.querySelectorAll('.view-tab');
+
+  const currentActive = document.querySelector('.mobile-view.active');
+  const nextView = document.querySelector(`.mobile-view[data-view="${viewName}"]`);
+
+  if (!nextView) return;
+
+  tabs.forEach(tab => {
     tab.classList.toggle('active', tab.dataset.view === viewName);
   });
 
+  if (!currentActive || currentActive === nextView || window.innerWidth > 900) {
+    views.forEach(view => {
+      view.classList.toggle('active', view.dataset.view === viewName);
+      view.classList.remove('swipe-out-left', 'swipe-out-right', 'swipe-in-left', 'swipe-in-right');
+    });
+
+    setTimeout(() => {
+      if (timelineChart) timelineChart.resize();
+      if (timelineChartMobile) timelineChartMobile.resize();
+      if (difficultyChart) difficultyChart.resize();
+      if (difficultyChartMobile) difficultyChartMobile.resize();
+    }, 80);
+    return;
+  }
+
+  const outClass = direction > 0 ? 'swipe-out-left' : 'swipe-out-right';
+  const inClass = direction > 0 ? 'swipe-in-left' : 'swipe-in-right';
+
+  nextView.classList.add(inClass);
+  nextView.classList.add('active');
+
+  requestAnimationFrame(() => {
+    currentActive.classList.add(outClass);
+    nextView.classList.remove(inClass);
+  });
+
   setTimeout(() => {
+    views.forEach(view => {
+      view.classList.toggle('active', view.dataset.view === viewName);
+      view.classList.remove('swipe-out-left', 'swipe-out-right', 'swipe-in-left', 'swipe-in-right');
+    });
+
     if (timelineChart) timelineChart.resize();
     if (timelineChartMobile) timelineChartMobile.resize();
     if (difficultyChart) difficultyChart.resize();
     if (difficultyChartMobile) difficultyChartMobile.resize();
-  }, 80);
+  }, 230);
+}
+
+function getMobileViewIndex(viewName) {
+  return MOBILE_VIEWS.indexOf(viewName);
+}
+
+function goToAdjacentMobileView(delta) {
+  const currentIndex = getMobileViewIndex(currentMobileView);
+  if (currentIndex === -1) return;
+
+  const nextIndex = currentIndex + delta;
+  if (nextIndex < 0 || nextIndex >= MOBILE_VIEWS.length) return;
+
+  setMobileView(MOBILE_VIEWS[nextIndex], delta > 0 ? 1 : -1);
 }
 
 function normalizeHistoryItem(item) {
@@ -1142,7 +1235,7 @@ function animateCountUpElement(elementId, endValue, options = {}) {
 
   const changed = prev !== endValue;
   const CountUpClass = window.countUp?.CountUp;
-
+  
   if (typeof CountUpClass === 'undefined') {
     console.log("CountUp undefined!")
     el.textContent = formattingFn ? formattingFn(endValue) : `${prefix}${endValue}${suffix}`;
@@ -1151,7 +1244,7 @@ function animateCountUpElement(elementId, endValue, options = {}) {
   }
 
   if (!countUpInstances[elementId]) {
-    countUpInstances[elementId] = new CountUp(elementId, endValue, {
+    countUpInstances[elementId] = new CountUpClass(elementId, endValue, {
       startVal: prev,
       duration,
       decimalPlaces: decimals,
@@ -1397,6 +1490,9 @@ async function actualizarEstadisticasIncremental() {
     if (added > 0) {
       aplicarRango(currentRange, Math.min(added, 14));
     }
+    else{
+     renderRecentHitsTable(0);
+    }
   } catch (e) {
     console.warn("No se pudo actualizar /history incrementalmente:", e);
   }
@@ -1521,7 +1617,7 @@ function actualizarKPIs(filteredData, newData = false) {
     } else {
       setTextBothStatic("kpi-hashrate", "kpi-hashrate-mobile", "-", true);
     }
-		
+  }
 }
 
 function renderRecentHitsTable(newRowsCount = 0) {
@@ -1543,6 +1639,7 @@ function renderRecentHitsTable(newRowsCount = 0) {
 
       const tdTime = document.createElement('td');
       tdTime.textContent = formatRelativeTime(item.t);
+      tdTime.title = tsToDate(item.t).toLocaleString();
 
       const tdDiff = document.createElement('td');
       tdDiff.textContent = formatDifficulty(item.d);
@@ -1858,6 +1955,75 @@ function renderCharts(filteredData) {
 }
 
 /* =========================
+   MOBILE SWIPE
+========================= */
+function setupMobileSwipe() {
+  const mobileMain = document.getElementById('mobileMain');
+  if (!mobileMain) return;
+
+  mobileMain.addEventListener('touchstart', (e) => {
+    if (window.innerWidth > 900) return;
+    if (!e.touches || e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchActive = true;
+    swipeLocked = false;
+  }, { passive: true });
+
+  mobileMain.addEventListener('touchmove', (e) => {
+    if (!touchActive || window.innerWidth > 900) return;
+    if (!e.touches || e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    if (Math.abs(dx) > 20 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+      swipeLocked = true;
+      mobileMain.classList.add('swiping');
+    }
+  }, { passive: true });
+
+  mobileMain.addEventListener('touchend', (e) => {
+    if (!touchActive || window.innerWidth > 900) return;
+
+    const touch = e.changedTouches && e.changedTouches[0];
+    if (!touch) {
+      touchActive = false;
+      swipeLocked = false;
+      mobileMain.classList.remove('swiping');
+      return;
+    }
+
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    touchActive = false;
+    mobileMain.classList.remove('swiping');
+
+    if (!swipeLocked) return;
+    if (Math.abs(dy) > SWIPE_MAX_VERTICAL) return;
+    if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+
+    if (dx < 0) {
+      goToAdjacentMobileView(1);
+    } else {
+      goToAdjacentMobileView(-1);
+    }
+
+    swipeLocked = false;
+  }, { passive: true });
+
+  mobileMain.addEventListener('touchcancel', () => {
+    touchActive = false;
+    swipeLocked = false;
+    mobileMain.classList.remove('swiping');
+  }, { passive: true });
+}
+
+/* =========================
    INIT
 ========================= */
 document.querySelectorAll('#rangeButtonsDesktop [data-range]').forEach(button => {
@@ -1872,7 +2038,11 @@ document.getElementById('mobileRangeSelect').addEventListener('change', (e) => {
 
 document.querySelectorAll('.view-tab').forEach(button => {
   button.addEventListener('click', () => {
-    setMobileView(button.dataset.view);
+    const targetView = button.dataset.view;
+    const currentIndex = getMobileViewIndex(currentMobileView);
+    const nextIndex = getMobileViewIndex(targetView);
+    const direction = nextIndex > currentIndex ? 1 : -1;
+    setMobileView(targetView, currentIndex === nextIndex ? 0 : direction);
   });
 });
 
@@ -1887,7 +2057,8 @@ window.addEventListener('resize', () => {
 
 async function initDashboard() {
   syncRangeButtons(currentRange);
-  setMobileView('kpis');
+  setMobileView('kpis', 0);
+  setupMobileSwipe();
 
   actualizarTiempoReal();
 
