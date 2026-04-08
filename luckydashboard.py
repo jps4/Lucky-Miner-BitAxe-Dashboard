@@ -182,7 +182,7 @@ def data_get():
 
     hashrate = calculate_hashrate(data['current_shares'], data['pool_diff'], data['current_pool_diff_session'])
     ret = {
-        'Timestamp': int(time.time()),
+        'Timestamp': lucky_info.get('timestamp', 0),
         'Uptime': human_readable_timediff(lucky_info['uptimeSeconds']),
         'Pool': f"{lucky_info['stratumURL']}:{lucky_info['stratumPort']}",
         'Power': f"{human_readable_diff(lucky_info['power'])}w",
@@ -294,8 +294,8 @@ def update_lucky_info(url: str) -> dict:
 
 async def get_logs():
     global data, lucky_info
-    lucky_info = update_lucky_info(lucky_info_url)
     start_time = time.time()
+    lucky_info = {**update_lucky_info(lucky_info_url), 'timestamp': int(start_time)}
 
     with open(f"luckyminer.{time.time()}.log", 'w') as lucky_log:
         while True:
@@ -317,6 +317,7 @@ async def get_logs():
                     try:
                         while True:
                             message = await websocket.recv()
+                            lucky_info['timestamp'] = int(time.time())
                             #lucky_log.write(message)
                             found_diff = current_diff_pattern.search(message)
                             if found_diff:
