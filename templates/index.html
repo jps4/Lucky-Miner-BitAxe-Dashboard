@@ -340,6 +340,125 @@
       max-width: 100%;
     }
 
+    .section-title-with-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #888;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.04);
+}
+
+.stale-green {
+  background: #4caf50 !important;
+}
+
+.stale-yellow {
+  background: #f0b429 !important;
+}
+
+.stale-red {
+  background: #ff4d4f !important;
+}
+
+.section-title-with-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #888;
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.04);
+}
+
+/* Colores base */
+.stale-green {
+  background: #4caf50 !important;
+}
+
+.stale-yellow {
+  background: #f0b429 !important;
+}
+
+.stale-red {
+  background: #ff4d4f !important;
+}
+
+/* Pulso suave cuando todo va bien */
+.section-status-dot.stale-green {
+  animation: pulseGreen 1.8s infinite ease-in-out;
+}
+
+/* Pulso más lento y "cautela" */
+.section-status-dot.stale-yellow {
+  animation: pulseYellow 1.6s infinite ease-in-out;
+}
+
+/* Alerta más visible */
+.section-status-dot.stale-red {
+  animation: pulseRed 1s infinite ease-in-out;
+}
+
+/* Keyframes */
+@keyframes pulseGreen {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseYellow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(240, 180, 41, 0);
+    transform: scale(1.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(240, 180, 41, 0);
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseRed {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.75);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
+    transform: scale(1.14);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+    transform: scale(1);
+  }
+}
+
     @media (max-width: 1200px) {
       html, body {
         overflow: auto;
@@ -712,7 +831,10 @@
   <!-- DESKTOP TOP -->
   <div class="top-row desktop-only">
     <div class="panel">
-      <h3>Sesión actual</h3>
+      <h3 class="section-title-with-status">
+        Sesión actual
+        <span id="session-status-indicator" class="section-status-dot" title="Esperando datos..."></span>
+      </h3>
       <div class="table-wrapper">
         <table id="realtime-table"></table>
       </div>
@@ -779,7 +901,10 @@
     <!-- REALTIME -->
     <div class="mobile-view" data-view="realtime">
       <div class="panel">
-        <h3>Sesión actual</h3>
+        <h3 class="section-title-with-status">
+          Sesión actual
+          <span id="session-status-indicator-mobile" class="section-status-dot" title="Esperando datos..."></span>
+        </h3>
         <div class="table-wrapper">
           <table id="realtime-table-mobile"></table>
         </div>
@@ -1387,7 +1512,71 @@ async function actualizarTiempoReal() {
   }
 }
 
+let latestSessionTimestamp = null;
+
+function getTimestampStatus(diff) {
+  if (diff > 60) {
+    return { label: "Sin refresco", className: "stale-red" };
+  }
+  if (diff > 30) {
+    return { label: "Lento", className: "stale-yellow" };
+  }
+  return { label: "OK", className: "stale-green" };
+}
+
+function formatTimeAgo(unixTs) {
+  const now = Math.floor(Date.now() / 1000);
+  let diff = now - Number(unixTs);
+
+  if (isNaN(diff)) return "-";
+  if (diff < 0) diff = 0;
+
+  if (diff < 5) return "ahora";
+  if (diff < 60) return `hace ${diff}s`;
+
+  const minutes = Math.floor(diff / 60);
+  if (minutes < 60) return `hace ${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `hace ${hours} h`;
+
+  const days = Math.floor(hours / 24);
+  return `hace ${days} d`;
+}
+
+function updateSessionStatusIndicators(timestamp) {
+  const indicators = [
+    document.getElementById("session-status-indicator"),
+    document.getElementById("session-status-indicator-mobile")
+  ];
+
+  indicators.forEach(el => {
+    if (!el) return;
+
+    if (timestamp == null || isNaN(Number(timestamp))) {
+      el.classList.remove("stale-green", "stale-yellow", "stale-red");
+      el.classList.add("stale-red");
+      el.title = "Sin datos";
+      return;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const diff = Math.max(0, now - Number(timestamp));
+    const status = getTimestampStatus(diff);
+
+    el.classList.remove("stale-green", "stale-yellow", "stale-red");
+    el.classList.add(status.className);
+    el.title = `${formatTimeAgo(timestamp)} · ${status.label}`;
+  });
+}
+
+function tickSessionStatus() {
+  updateSessionStatusIndicators(latestSessionTimestamp);
+}
+
 function renderRealtimeTable(data) {
+  latestSessionTimestamp = data["Timestamp"] ?? null;
+
   const renderInto = (tableId, fields) => {
     const table = document.getElementById(tableId);
     if (!table) return;
@@ -1410,7 +1599,10 @@ function renderRealtimeTable(data) {
 
   renderInto('realtime-table', fieldsToShow);
   renderInto('realtime-table-mobile', fieldsToShow);
+
+  updateSessionStatusIndicators(latestSessionTimestamp);
 }
+
 
 /* =========================
    HISTORY FETCH
@@ -2072,6 +2264,7 @@ async function initDashboard() {
 
   setInterval(actualizarTiempoReal, REALTIME_REFRESH_MS);
   setInterval(actualizarEstadisticasIncremental, HISTORY_REFRESH_MS);
+  setInterval(tickSessionStatus, 1000);
 }
 
 initDashboard();
