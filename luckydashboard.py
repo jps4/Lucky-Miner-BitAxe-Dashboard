@@ -6,7 +6,7 @@ import sys
 import time
 import requests
 from datetime import datetime, timezone
-import glob, os, gzip, json
+import glob, os, gzip,json
 
 from flask import Flask, jsonify, request, render_template, Response
 import threading
@@ -29,8 +29,8 @@ lucky_info = {}
 
 
 def run_flask():
-   #app.run(host="0.0.0.0", port=8081)
-    app.run(host="127.0.0.1", port=8081)
+   app.run(host="0.0.0.0", port=8080)
+   #app.run(host="127.0.0.1", port=8081)
 
 @app.route("/")
 def index():
@@ -44,6 +44,7 @@ cached_data = []
 def iso_to_unix(ts_str):
     dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
     return int(dt.timestamp())
+
 
 def get_all_logs():
     files = glob.glob("luckyminer.*.log")
@@ -165,6 +166,15 @@ def history():
     response.headers["Vary"] = "Accept-Encoding"
     return response
 
+    raw = json.dumps(cached_data).encode("utf-8")
+    gzipped = gzip.compress(raw)
+
+    response = Response(gzipped, mimetype="application/json")
+    response.headers["Content-Encoding"] = "gzip"
+    response.headers["Content-Length"] = str(len(gzipped))
+    response.headers["Vary"] = "Accept-Encoding"
+    return response
+
 
 @app.route("/data", methods=["GET"])
 def data_get():
@@ -172,6 +182,7 @@ def data_get():
 
     hashrate = calculate_hashrate(data['current_shares'], data['pool_diff'], data['current_pool_diff_session'])
     ret = {
+        'Timestamp': int(time.time()),
         'Uptime': human_readable_timediff(lucky_info['uptimeSeconds']),
         'Pool': f"{lucky_info['stratumURL']}:{lucky_info['stratumPort']}",
         'Power': f"{human_readable_diff(lucky_info['power'])}w",
@@ -299,8 +310,6 @@ async def get_logs():
             print("")
 
             try:
-                while True:
-                    time.sleep(1)
                 async with websockets.connect(url_websocket) as websocket:
                     # print(f"Conectado al WebSocket en {url_websocket}")
                     
@@ -335,11 +344,11 @@ async def get_logs():
                         await websocket.close()
                         raise
             except websockets.ConnectionClosed as e:
-                pass
+                print("websockets.ConnectionClosed exception")
             except KeyboardInterrupt:
                 print("Ctrl+C, exiting...")
             except Exception as e:
-                pass
+                print(e)
 
 
 
@@ -348,4 +357,5 @@ if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(get_logs())
 
 #    threading.Thread(target=run_flask).start()
+
 
