@@ -64,7 +64,7 @@
 
     .kpi-row {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       gap: 10px;
       min-height: 72px;
       min-width: 0;
@@ -128,6 +128,12 @@
 
     .kpi-card.kpi-updated .kpi-value {
       text-shadow: 0 0 10px rgba(0,255,0,0.35);
+    }
+
+    .kpi-luck {
+      font-weight: 700;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 8px currentColor;
     }
 
     .controls-row {
@@ -883,6 +889,10 @@
       <div class="kpi-title">Hashrate medio</div>
       <div class="kpi-value" id="kpi-hashrate">0</div>
     </div>
+    <div class="kpi-card" id="card-kpi-lucktop10">
+      <div class="kpi-title">Luck (top 10)</div>
+      <div class="kpi-value kpi-luck" id="kpi-lucktop10">0</div>
+    </div>
     <div class="kpi-card" id="card-kpi-newhits">
       <div class="kpi-title">Nuevos desde carga</div>
       <div class="kpi-value" id="kpi-newhits">0</div>
@@ -979,10 +989,14 @@
           <div class="kpi-title">Hashrate medio</div>
           <div class="kpi-value" id="kpi-hashrate-mobile">0</div>
         </div>
-        <div class="kpi-card" id="card-kpi-newhits-mobile">
+        <div class="kpi-card" id="card-kpi-lucktop10-mobile">
+          <div class="kpi-title">Luck (top 10)</div>
+          <div class="kpi-value kpi-luck" id="kpi-lucktop10-mobile">0</div>
+        </div>
+        <!-- <div class="kpi-card" id="card-kpi-newhits-mobile">
           <div class="kpi-title">Nuevos desde carga</div>
           <div class="kpi-value" id="kpi-newhits-mobile">0</div>
-        </div>
+        </div> -->
       </div>
     </div>
 
@@ -1411,10 +1425,33 @@ function animateElementClass(el, className, duration = 900) {
 
 function flashNewHitUI() {
   animateElementClass(document.getElementById('card-kpi-newhits'), 'kpi-newhits-burst', 1200);
-  animateElementClass(document.getElementById('card-kpi-newhits-mobile'), 'kpi-newhits-burst', 1200);
+  // animateElementClass(document.getElementById('card-kpi-newhits-mobile'), 'kpi-newhits-burst', 1200);
+  animateElementClass(document.getElementById('card-kpi-lucktop10'), 'kpi-lucktop10', 1200);
+  animateElementClass(document.getElementById('card-kpi-lucktop10-mobile'), 'kpi-lucktop10-mobile', 1200);
 
   animateElementClass(document.getElementById('recent-hits-panel-desktop'), 'panel-flash', 950);
   animateElementClass(document.getElementById('recent-hits-panel-mobile'), 'panel-flash', 950);
+}
+
+function luckToHsl(luck) {
+  const normalized = (luck - 100) / 100;
+  const v = Math.max(-1, Math.min(normalized, 1));
+
+  // hue mapping:
+  // -1 → red (0°)
+  //  0 → orange (35°)
+  // +1 → green (120°)
+  let hue;
+  if (v < 0) {
+    hue = 35 + (v * 35); // 35 → 0
+  } else {
+    hue = 35 + (v * 85); // 35 → 120
+  }
+
+  const saturation = 85;
+  const lightness = 45;
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
 /* =========================
@@ -1551,7 +1588,8 @@ async function mergeHistoryData(newItems, countAsNewHits = false, persist = true
 
     if (countAsNewHits) {
       newHitsSinceLoad += added;
-      animateCountUpBoth("kpi-newhits", "kpi-newhits-mobile", newHitsSinceLoad, {
+      // animateCountUpBoth("kpi-newhits", "kpi-newhits-mobile", newHitsSinceLoad, {
+      animateCountUpElement("kpi-newhits", newHitsSinceLoad, {
         duration: 0.9,
         decimals: 0,
         separator: ','
@@ -1730,7 +1768,6 @@ function renderMinerTabs(dataArray) {
     document.getElementById("miners-tabs"),
     document.getElementById("miners-tabs-mobile")
   ];
-  console.log(dataArray)
   containers.forEach((container, idx) => {
     if (!container) return;
     container.innerHTML = "";
@@ -1882,6 +1919,24 @@ function getTopHits(data, k = 14) {
   return top;
 }
 
+function calculateLuckTopN(hits, totalHashes) {
+  if (!hits?.length || !totalHashes) return 0;
+
+  let weightedSum = 0;
+  let weightTotal = 0;
+  for (let i = 0; i < hits.length; i++) {
+    const weight = 1 / (i + 1);
+    weightedSum += hits[i].d * weight;
+    weightTotal += weight;
+  }
+
+  const avgWeightedDifficulty = weightedSum / weightTotal;
+  const expected = avgWeightedDifficulty * Math.pow(2, 32);
+  const luck = expected / totalHashes;
+
+  return luck * 100;
+}
+
 /* =========================
    FILTERING
 ========================= */
@@ -1949,9 +2004,15 @@ function actualizarKPIs(filteredData, newData = false) {
   setTextBothStatic("kpi-last1m", "kpi-last1m-mobile", last1MTime ? formatRelativeTime(last1MTime) : "-", true);
 
   if ( newData){
+    let totalHash = 0;
     let hashrate = null;
+    let luck = 0;
     if (lastTimestamp && firstTimestamp && lastTimestamp > firstTimestamp) {
-      hashrate = 10000 * 2**32 * filteredData.length / (lastTimestamp - firstTimestamp);
+      totalHash = 10000 * 2**32 * total;
+      hashrate = totalHash / (lastTimestamp - firstTimestamp);
+
+      let bestTop10 = getTopHits(filteredData, 10);
+      luck = calculateLuckTopN(bestTop10, totalHash);
     }
 
     animateCountUpBoth("kpi-total", "kpi-total-mobile", total, {
@@ -1959,6 +2020,14 @@ function actualizarKPIs(filteredData, newData = false) {
       decimals: 0,
       separator: ','
     });
+    animateCountUpBoth("kpi-lucktop10", "kpi-lucktop10-mobile", luck, {
+      duration: 0.9,
+      decimals: 2,
+      suffix: '%',
+      separator: ','
+    });
+    document.querySelector("#kpi-lucktop10").style.color = luckToHsl(luck);
+    document.querySelector("#kpi-lucktop10-mobile").style.color = luckToHsl(luck);
 
     if (best > -Infinity) {
       const bestFmt = formatSuffixNumber(best, [
