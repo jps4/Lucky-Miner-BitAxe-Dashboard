@@ -316,6 +316,60 @@
       }
     }
 
+        /* Tabs */
+    .hits-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .hits-tab {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #222;
+      cursor: pointer;
+      font-size: 13px;
+      user-select: none;
+      transition: background 0.2s ease;
+    }
+
+    .hits-tab:hover {
+      background: #2a2a2a;
+    }
+
+    .hits-tab.active {
+      background: #333;
+      font-weight: 600;
+    }
+
+    /* Tabla */
+    .standalone-hits table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .standalone-hits td {
+      padding: 4px 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    /* Highlight hits grandes */
+    .hit-high {
+      color: #00ff99;
+      font-weight: bold;
+    }
+
+    /* Nuevos hits */
+    .new-hit-row {
+      animation: highlightFade 1.2s ease;
+    }
+
+    @keyframes highlightFade {
+      0% { background: rgba(0, 255, 150, 0.25); }
+      100% { background: transparent; }
+    }
+
     .mobile-topbar,
     .mobile-bottombar,
     .mobile-main {
@@ -341,123 +395,144 @@
     }
 
     .section-title-with-status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-.section-status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #888;
-  display: inline-block;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.04);
-}
+    .section-status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #888;
+      display: inline-block;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.04);
+    }
 
-.stale-green {
-  background: #4caf50 !important;
-}
+    .stale-green {
+      background: #4caf50 !important;
+    }
 
-.stale-yellow {
-  background: #f0b429 !important;
-}
+    .stale-yellow {
+      background: #f0b429 !important;
+    }
 
-.stale-red {
-  background: #ff4d4f !important;
-}
+    .stale-red {
+      background: #ff4d4f !important;
+    }
 
-.section-title-with-status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+    .section-title-with-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-.section-status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #888;
-  display: inline-block;
-  flex-shrink: 0;
-  position: relative;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.04);
-}
+    .section-status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #888;
+      display: inline-block;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.04);
+    }
 
-/* Colores base */
-.stale-green {
-  background: #4caf50 !important;
-}
+    /* Colores base */
+    .stale-green {
+      background: #4caf50 !important;
+    }
 
-.stale-yellow {
-  background: #f0b429 !important;
-}
+    .stale-yellow {
+      background: #f0b429 !important;
+    }
 
-.stale-red {
-  background: #ff4d4f !important;
-}
+    .stale-red {
+      background: #ff4d4f !important;
+    }
 
-/* Pulso suave cuando todo va bien */
-.section-status-dot.stale-green {
-  animation: pulseGreen 1.8s infinite ease-in-out;
-}
+    /* Pulso suave cuando todo va bien */
+    .section-status-dot.stale-green {
+      animation: pulseGreen 1.8s infinite ease-in-out;
+    }
 
-/* Pulso más lento y "cautela" */
-.section-status-dot.stale-yellow {
-  animation: pulseYellow 1.6s infinite ease-in-out;
-}
+    /* Pulso más lento y "cautela" */
+    .section-status-dot.stale-yellow {
+      animation: pulseYellow 1.6s infinite ease-in-out;
+    }
 
-/* Alerta más visible */
-.section-status-dot.stale-red {
-  animation: pulseRed 1s infinite ease-in-out;
-}
+    /* Alerta más visible */
+    .section-status-dot.stale-red {
+      animation: pulseRed 1s infinite ease-in-out;
+    }
 
-/* Keyframes */
-@keyframes pulseGreen {
-  0% {
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.55);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
-    transform: scale(1.08);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-    transform: scale(1);
-  }
-}
+    /* Keyframes */
+    @keyframes pulseGreen {
+      0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.55);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
+        transform: scale(1.08);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+        transform: scale(1);
+      }
+    }
 
-@keyframes pulseYellow {
-  0% {
-    box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.55);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 9px rgba(240, 180, 41, 0);
-    transform: scale(1.1);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(240, 180, 41, 0);
-    transform: scale(1);
-  }
-}
+    @keyframes pulseYellow {
+      0% {
+        box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.55);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 9px rgba(240, 180, 41, 0);
+        transform: scale(1.1);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(240, 180, 41, 0);
+        transform: scale(1);
+      }
+    }
 
-@keyframes pulseRed {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.75);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
-    transform: scale(1.14);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
-    transform: scale(1);
-  }
-}
+    @keyframes pulseRed {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.75);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
+        transform: scale(1.14);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+        transform: scale(1);
+      }
+    }
+
+    .miners-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .miner-tab {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #222;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .miner-tab.active {
+      background: #333;
+      font-weight: bold;
+    }
 
     @media (max-width: 1200px) {
       html, body {
@@ -833,15 +908,28 @@
     <div class="panel">
       <h3 class="section-title-with-status">
         Sesión actual
-        <span id="session-status-indicator" class="section-status-dot" title="Esperando datos..."></span>
       </h3>
+
+      <!-- Tabs de mineros -->
+      <div id="miners-tabs" class="miners-tabs"></div>
+
       <div class="table-wrapper">
         <table id="realtime-table"></table>
       </div>
     </div>
 
     <div class="panel recent-hits-panel" id="recent-hits-panel-desktop">
-      <h3>Últimos hits</h3>
+      <!-- <h3>Últimos hits</h3>
+      <div class="mini-table-wrapper standalone-hits">
+        <table id="recent-hits-table">
+          <tbody></tbody>
+        </table>
+      </div> -->
+      <div class="hits-tabs">
+        <div class="hits-tab active" data-tab="recent">Last</div>
+        <div class="hits-tab" data-tab="best">Best</div>
+      </div>
+
       <div class="mini-table-wrapper standalone-hits">
         <table id="recent-hits-table">
           <tbody></tbody>
@@ -859,7 +947,7 @@
 
   <!-- DESKTOP BOTTOM -->
   <div class="panel bottom-row desktop-only">
-    <h3>Distribución de dificultades encontradas</h3>
+    <h3>Distribución de dificultades</h3>
     <div class="chart-wrapper">
       <canvas id="difficultyChart"></canvas>
     </div>
@@ -901,10 +989,14 @@
     <!-- REALTIME -->
     <div class="mobile-view" data-view="realtime">
       <div class="panel">
-        <h3 class="section-title-with-status">
+        <!-- <h3 class="section-title-with-status">
           Sesión actual
           <span id="session-status-indicator-mobile" class="section-status-dot" title="Esperando datos..."></span>
-        </h3>
+        </h3> -->
+
+        <!-- Tabs de mineros -->
+        <div id="miners-tabs-mobile" class="miners-tabs"></div>
+
         <div class="table-wrapper">
           <table id="realtime-table-mobile"></table>
         </div>
@@ -913,13 +1005,23 @@
 
     <!-- RECENT HITS -->
     <div class="mobile-view" data-view="recent">
-      <div class="panel recent-hits-panel" id="recent-hits-panel-mobile">
+      <!-- <div class="panel recent-hits-panel" id="recent-hits-panel-mobile">
         <h3>Últimos hits</h3>
         <div class="mini-table-wrapper standalone-hits">
           <table id="recent-hits-table-mobile">
             <tbody></tbody>
           </table>
         </div>
+      </div> -->
+      <div class="hits-tabs">
+        <div class="hits-tab active" data-tab="recent">Last</div>
+        <div class="hits-tab" data-tab="best">Best</div>
+      </div>
+
+      <div class="mini-table-wrapper standalone-hits">
+        <table id="recent-hits-table-mobile">
+          <tbody></tbody>
+        </table>
       </div>
     </div>
 
@@ -936,7 +1038,7 @@
     <!-- DISTRIBUTION -->
     <div class="mobile-view" data-view="distribution">
       <div class="panel mobile-chart-panel">
-        <h3>Distribución de dificultades encontradas</h3>
+        <h3>Distribución de dificultades</h3>
         <div class="chart-wrapper">
           <canvas id="difficultyChartMobile"></canvas>
         </div>
@@ -1025,6 +1127,12 @@ let touchStartX = 0;
 let touchStartY = 0;
 let touchActive = false;
 let swipeLocked = false;
+
+// recent hits or best hits table
+let selectedHitsTab = "recent";
+let currentFilteredData = [];
+
+let latestSessionTimestamps = [null, null];
 
 /* =========================
    INDEXEDDB
@@ -1258,15 +1366,16 @@ function normalizeHistoryItem(item) {
   if (!item) return null;
 
   const t = Number(item.t);
+  const m = Number(item.m);
   const d = Number(item.d);
 
-  if (!Number.isFinite(t) || !Number.isFinite(d)) return null;
+  if (!Number.isFinite(t) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
 
-  return { t, d };
+  return { t, m, d };
 }
 
 function getItemKey(item) {
-  return `${item.t}_${item.d}`;
+  return `${item.t}_${item.m}_${item.d}`;
 }
 
 function rebuildSeenKeys() {
@@ -1466,7 +1575,7 @@ function generarMockData() {
     const t = nowSec - Math.floor(Math.random() * 365 * 24 * 60 * 60);
 
     const rand = Math.random();
-    let d;
+    let d, m;
 
     if (rand > 0.985) d = 1e12;
     else if (rand > 0.96) d = 1e11;
@@ -1478,7 +1587,10 @@ function generarMockData() {
     else if (rand > 0.18) d = 1e5;
     else d = 1e4;
 
-    data.push({ t, d });
+    if (rand > 0.25) m = 1
+    else m = 0
+
+    data.push({ t, m, d });
   }
 
   return data.sort((a, b) => a.t - b.t);
@@ -1489,10 +1601,12 @@ function generarMockData() {
 ========================= */
 async function actualizarTiempoReal() {
   try {
-    const res = await fetch('/data');
-    const data = await res.json();
-    renderRealtimeTable(data);
+    const res = await fetch('/v2/data');
+    const minersData = await res.json();
+    renderMinerTabs(minersData['items']);
+    renderRealtimeTable(minersData['items'][selectedMinerIndex]);
   } catch (e) {
+    console.log(e)
     const mockRealtime = {
       "Best diff": "1.23G",
       "Best diff ever": "102.5G",
@@ -1508,11 +1622,14 @@ async function actualizarTiempoReal() {
       "Total shares": "12,345",
       "Uptime": "6d 14h"
     };
-    renderRealtimeTable(mockRealtime);
+    const minersData = [
+      { ...mockRealtime, "Miner id": 0, "Miner name": "Lucky Miner LV06", "Best diff": "1.23G" },
+      { ...mockRealtime, "Miner id": 1, "Miner name": "BitAxe Gamma 601", "Best diff": "67.86G" }
+    ]
+    renderMinerTabs(minersData);
+    renderRealtimeTable(minersData[selectedMinerIndex]);
   }
 }
-
-let latestSessionTimestamp = null;
 
 function getTimestampStatus(diff) {
   if (diff > 60) {
@@ -1544,10 +1661,14 @@ function formatTimeAgo(unixTs) {
   return `hace ${days} d`;
 }
 
-function updateSessionStatusIndicators(timestamp) {
+
+let selectedMinerIndex = 0;
+
+
+function updateSessionStatusIndicators(timestamp, index) {
   const indicators = [
-    document.getElementById("session-status-indicator"),
-    document.getElementById("session-status-indicator-mobile")
+    document.getElementById(`session-status-indicator-${index}`),
+    document.getElementById(`session-status-indicator-mobile-${index}`)
   ];
 
   indicators.forEach(el => {
@@ -1571,11 +1692,12 @@ function updateSessionStatusIndicators(timestamp) {
 }
 
 function tickSessionStatus() {
-  updateSessionStatusIndicators(latestSessionTimestamp);
+  latestSessionTimestamps.forEach( (timestamp, index) => {
+    updateSessionStatusIndicators(timestamp, index)
+  })
 }
 
 function renderRealtimeTable(data) {
-  latestSessionTimestamp = data["Timestamp"] ?? null;
 
   const renderInto = (tableId, fields) => {
     const table = document.getElementById(tableId);
@@ -1600,9 +1722,50 @@ function renderRealtimeTable(data) {
   renderInto('realtime-table', fieldsToShow);
   renderInto('realtime-table-mobile', fieldsToShow);
 
-  updateSessionStatusIndicators(latestSessionTimestamp);
+  updateSessionStatusIndicators(latestSessionTimestamps[miner_id]);
 }
 
+function renderMinerTabs(dataArray) {
+  const containers = [
+    document.getElementById("miners-tabs"),
+    document.getElementById("miners-tabs-mobile")
+  ];
+  console.log(dataArray)
+  containers.forEach((container, idx) => {
+    if (!container) return;
+    container.innerHTML = "";
+    const mobile_id = (idx===0) ? "" : "mobile-"
+
+    dataArray.forEach((miner, index) => {
+      miner_id = miner['Miner id']
+      latestSessionTimestamps[miner_id] = miner["Timestamp"] ?? null;
+
+      const tab = document.createElement('div');
+      tab.className = 'miner-tab' + (index === selectedMinerIndex ? ' active' : '');
+
+      // Nombre
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = miner["Miner name"] ?? `Miner ${index}`;
+
+      // Indicador estado
+      const statusDot = document.createElement('span');
+      statusDot.className = 'section-status-dot';
+      statusDot.id = `session-status-indicator-${mobile_id}${index}`;
+
+      tab.appendChild(nameSpan);
+      tab.appendChild(statusDot);
+
+      tab.onclick = () => {
+        selectedMinerIndex = index;
+        renderMinerTabs(dataArray);
+        renderRealtimeTable(dataArray[selectedMinerIndex]);
+      };
+
+      container.appendChild(tab);
+      updateSessionStatusIndicators(latestSessionTimestamps[miner_id], index)
+    });
+  });
+}
 
 /* =========================
    HISTORY FETCH
@@ -1638,10 +1801,10 @@ async function cargarEstadisticasIniciales() {
   let data;
 
   try {
-    const res = await fetch('/history');
+    const res = await fetch('/v2//history');
     data = await res.json();
   } catch (e) {
-    console.warn("Usando datos mock para /history");
+    console.warn("Usando datos mock para /v2/history");
     data = generarMockData();
   }
 
@@ -1667,13 +1830,12 @@ async function actualizarEstadisticasIncremental() {
   }
 
   try {
-    const res = await fetch(`/history?t=${lastHistoryTimestamp}`);
+    const res = await fetch(`/v2/history?t=${lastHistoryTimestamp}`);
     const data = await res.json();
 
     if (!Array.isArray(data) || data.length === 0){
-      renderRecentHitsTable(0);
-      const filtered = filtrarDatosPorRango(currentRange);
-      actualizarKPIs(filtered);
+      renderHitsTable(currentFilteredData, 0);
+      actualizarKPIs(currentFilteredData);
       return;
     }
 
@@ -1683,11 +1845,41 @@ async function actualizarEstadisticasIncremental() {
       aplicarRango(currentRange, Math.min(added, 14));
     }
     else{
-     renderRecentHitsTable(0);
+     renderHitsTable(currentFilteredData, 0);
     }
   } catch (e) {
-    console.warn("No se pudo actualizar /history incrementalmente:", e);
+    console.warn("No se pudo actualizar /v2/history incrementalmente:", e);
   }
+}
+
+
+function getTopHits(data, k = 14) {
+  const top = [];
+
+  for (const item of data) {
+    if (top.length < k) {
+      top.push(item);
+      continue;
+    }
+
+    // Buscar el mínimo actual en top
+    let minIndex = 0;
+    for (let i = 1; i < k; i++) {
+      if (top[i].d < top[minIndex].d) {
+        minIndex = i;
+      }
+    }
+
+    // Si el nuevo es mejor, sustituye al peor
+    if (item.d > top[minIndex].d) {
+      top[minIndex] = item;
+    }
+  }
+
+  // Orden final DESC (solo 14 elementos → barato)
+  top.sort((a, b) => b.d - a.d);
+
+  return top;
 }
 
 /* =========================
@@ -1812,20 +2004,27 @@ function actualizarKPIs(filteredData, newData = false) {
   }
 }
 
-function renderRecentHitsTable(newRowsCount = 0) {
+function renderHitsTable(filteredData, newRowsCount = 0) {
+  if (!filteredData) return;
+
   const renderInto = (selector) => {
     const tbody = document.querySelector(selector);
     if (!tbody) return;
 
     tbody.innerHTML = "";
 
-    const recent = allData.slice(-14).reverse();
+    let dataToRender;
+    if (selectedHitsTab === "recent") {
+      dataToRender = filteredData.slice(-14).reverse();
+    } else {
+      dataToRender = getTopHits(filteredData, 14);
+    }
 
-    for (let i = 0; i < recent.length; i++) {
-      const item = recent[i];
+    for (let i = 0; i < dataToRender.length; i++) {
+      const item = dataToRender[i];
       const tr = document.createElement('tr');
 
-      if (i < newRowsCount) {
+      if (selectedHitsTab === "recent" && i < newRowsCount) {
         tr.classList.add('new-hit-row');
       }
 
@@ -1837,7 +2036,11 @@ function renderRecentHitsTable(newRowsCount = 0) {
       tdDiff.textContent = formatDifficulty(item.d);
 
       if (item.d >= 1e9) tdDiff.classList.add('hit-high');
-
+      if (selectedHitsTab === "best") {
+        if (i === 0) tdDiff.textContent = tdDiff.textContent + " 🥇";
+        else if (i === 1) tdDiff.textContent = tdDiff.textContent + " 🥈";
+        else if (i === 2) tdDiff.textContent = tdDiff.textContent + " 🥉";
+      }
       tr.appendChild(tdTime);
       tr.appendChild(tdDiff);
       tbody.appendChild(tr);
@@ -1848,6 +2051,26 @@ function renderRecentHitsTable(newRowsCount = 0) {
   renderInto('#recent-hits-table-mobile tbody');
 }
 
+function initHitsTabs() {
+  document.querySelectorAll('.hits-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const newTab = tab.dataset.tab;
+
+      if (newTab === selectedHitsTab) return;
+
+      selectedHitsTab = newTab;
+
+      // actualizar estado visual (desktop + mobile)
+      document.querySelectorAll('.hits-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === selectedHitsTab);
+      });
+
+      // re-render
+      renderHitsTable(currentFilteredData);
+    });
+  });
+}
+
 /* =========================
    RANGE APPLY
 ========================= */
@@ -1856,18 +2079,20 @@ function aplicarRango(range, newRowsCount = 0) {
   syncRangeButtons(range);
 
   const filtered = filtrarDatosPorRango(range);
+  currentFilteredData = filtered;
 
-  if (filtered.length === 0) {
+
+  if (currentFilteredData.length === 0) {
     setTimeRangeText("No hay datos para ese rango temporal.", "Sin datos");
     actualizarKPIs([]);
-    renderRecentHitsTable(0);
+    renderHitsTable([], 0);
     updateDifficultyChart([]);
     updateTimelineChart([]);
     return;
   }
 
   actualizarKPIs(filtered, true);
-  renderRecentHitsTable(newRowsCount);
+  renderHitsTable(filtered, newRowsCount);
   renderCharts(filtered);
 }
 
@@ -2252,6 +2477,7 @@ async function initDashboard() {
   setMobileView('kpis', 0);
   setupMobileSwipe();
 
+  initHitsTabs();
   actualizarTiempoReal();
 
   const restored = await restoreFromCacheIfPossible();
