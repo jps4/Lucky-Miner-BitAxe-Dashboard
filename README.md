@@ -8,8 +8,15 @@ Data from Miner is retrieved via WebSockets and REST call. Python backend provid
 Miner, and <b>/history</b>, which exports a list of obtained difficulties (greater than 10K) and timestamp.
 
 Frontend renders a complete dashboard on desktop devices, including:
-- Main KPIs: total occurencies, best diff, time since last >=1M diff hash, number of diffs >=1G, total hashrate (extracted from 10K diff hashes), and new hashes from dashboard load
-- Current session: parameters provided by Miner (temp, power, hashrate, pool diff...)
+- Main KPIs:
+    - total occurencies
+    - best diff
+    - time since last >=1M diff hash
+    - number of diffs >=1G
+    - total hashrate (extracted from 10K diff hashes)
+    - luck (weighted calc from Top 10 hits in current range)
+    - new hashes from dashboard load
+- Current session: parameters provided by Miner (temp, power, hashrate, pool diff...) by WebSockets. Support for 2 miners (virtually N with minimal effort)
 - Latest best difficulties
 - Graphs with occurrences and distribution of difficulties (logaritmic y-axis to show Poisson-distribution shape)
 
