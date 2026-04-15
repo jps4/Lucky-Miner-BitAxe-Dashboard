@@ -64,7 +64,7 @@
 
     .kpi-row {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(9, 1fr);
       gap: 10px;
       min-height: 72px;
       min-width: 0;
@@ -894,6 +894,14 @@
       <div class="kpi-title">Luck (weighted top 10)</div>
       <div class="kpi-value kpi-luck" id="kpi-lucktop10">0</div>
     </div>
+    <div class="kpi-card" id="card-kpi-bch-network-diff">
+      <div class="kpi-title">Network diff</div>
+      <div class="kpi-value" id="kpi-bch-network-diff">0</div>
+    </div>
+    <div class="kpi-card" id="card-kpi-blockprobability">
+      <div class="kpi-title">Block probability</div>
+      <div class="kpi-value" id="kpi-blockprobability">0</div>
+    </div>
     <div class="kpi-card" id="card-kpi-newhits">
       <div class="kpi-title">New</div>
       <div class="kpi-value" id="kpi-newhits">0</div>
@@ -988,8 +996,16 @@
           <div class="kpi-title">Luck (weighted top 10)</div>
           <div class="kpi-value kpi-luck" id="kpi-lucktop10-mobile">0</div>
         </div>
+        <div class="kpi-card" id="card-kpi-bch-network-diff-mobile">
+          <div class="kpi-title">Network diff</div>
+          <div class="kpi-value" id="kpi-bch-network-diff-mobile">0</div>
+        </div>
+        <div class="kpi-card" id="card-kpi-blockprobability-mobile">
+          <div class="kpi-title">Block probability</div>
+          <div class="kpi-value" id="kpi-blockprobability-mobile">0</div>
+        </div>
         <div class="kpi-card" id="card-kpi-newhits-mobile">
-          <div class="kpi-title">Nuevos desde carga</div>
+          <div class="kpi-title">New</div>
           <div class="kpi-value" id="kpi-newhits-mobile">0</div>
         </div>
       </div>
@@ -1091,6 +1107,7 @@ const HISTORY_REFRESH_MS = 20000;
 const MOBILE_VIEWS = ['kpis', 'realtime', 'recent', 'timeline', 'distribution'];
 const SWIPE_THRESHOLD = 55;
 const SWIPE_MAX_VERTICAL = 50;
+const COIN_BLOCK_DIFF_REFRESH_MS = 600000
 
 /* IndexedDB */
 const DB_NAME = "lucky_miner_dashboard";
@@ -1129,6 +1146,8 @@ let selectedHitsTab = "recent";
 let currentFilteredData = [];
 
 let latestSessionTimestamps = [null, null];
+
+let coinBlockDiff = 0;
 
 /* =========================
    INDEXEDDB
@@ -1436,11 +1455,22 @@ function luckToHsl(luck) {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
-async function getBchDifficulty() {
+async function getCoinDifficulty() {
   const res = await fetch("https://api.blockchair.com/bitcoin-cash/stats");
   const data = await res.json();
 
-  return data.data.difficulty;
+  coinBlockDiff = data.data.difficulty;
+}
+
+function calculateBlockProbability(hashrate, timeSeconds) {
+  if (!hashrate || !coinBlockDiff || !timeSeconds) return -Infinity;
+
+  const hashesPerBlock = coinBlockDiff * Math.pow(2, 32);
+  const lambda = hashrate / hashesPerBlock;
+
+  const probability = 1 - Math.exp(-lambda * timeSeconds);
+
+  return probability * 100;
 }
 
 /* =========================
@@ -1974,6 +2004,7 @@ function actualizarKPIs(filteredData, newData = false) {
   let last1MTime = null;
   let firstTimestamp = null;
   let lastTimestamp = null;
+  let probability = -Infinity;
 
   for (const item of filteredData) {
     const diff = item.d;
@@ -1992,6 +2023,24 @@ function actualizarKPIs(filteredData, newData = false) {
 
   setTextBothStatic("kpi-last1m", "kpi-last1m-mobile", last1MTime ? formatRelativeTime(last1MTime) : "-", true);
 
+  if (coinBlockDiff) {
+      const coinBlockDiffFmt = formatSuffixNumber(coinBlockDiff, [
+        { min: 1e12, suffix: 'T' },
+        { min: 1e9, suffix: 'G' },
+        { min: 1e6, suffix: 'M' },
+        { min: 1e3, suffix: 'K' }
+      ]);
+
+      animateCountUpBoth("kpi-bch-network-diff", "kpi-bch-network-diff-mobile", coinBlockDiffFmt.scaled.toFixed(2), {
+        duration: 1.0,
+        decimals: 2,
+        suffix: coinBlockDiffFmt.suffix,
+        separator: ','
+      });
+  } else {
+    setTextBothStatic("kpi-bch-network-diff", "kpi-bch-network-diff-mobile", "-", true);
+  }
+
   if ( newData){
     let totalHash = 0;
     let hashrate = null;
@@ -2002,6 +2051,8 @@ function actualizarKPIs(filteredData, newData = false) {
 
       let bestTop10 = getTopHits(filteredData, 10);
       luck = calculateLuckTopN(bestTop10, totalHash);
+
+      probability = calculateBlockProbability(hashrate, lastTimestamp - firstTimestamp);
     }
 
     animateCountUpBoth("kpi-total", "kpi-total-mobile", total, {
@@ -2058,6 +2109,18 @@ function actualizarKPIs(filteredData, newData = false) {
       });
     } else {
       setTextBothStatic("kpi-hashrate", "kpi-hashrate-mobile", "-", true);
+    }
+
+    if(probability > -Infinity){
+      animateCountUpBoth("kpi-blockprobability", "kpi-blockprobability-mobile", probability, {
+        duration: 0.9,
+        decimals: 6,
+        suffix: '%',
+        separator: ','
+      });
+    }
+    else{
+      setTextBothStatic("kpi-blockprobability", "kpi-blockprobability-mobile", "-", true);
     }
   }
 }
@@ -2547,6 +2610,8 @@ async function initDashboard() {
   setMobileView('kpis', 0);
   setupMobileSwipe();
 
+  await getCoinDifficulty();
+
   initHitsTabs();
   actualizarTiempoReal();
 
@@ -2561,6 +2626,7 @@ async function initDashboard() {
   setInterval(actualizarTiempoReal, REALTIME_REFRESH_MS);
   setInterval(actualizarEstadisticasIncremental, HISTORY_REFRESH_MS);
   setInterval(tickSessionStatus, 1000);
+  setInterval(getCoinDifficulty, COIN_BLOCK_DIFF_REFRESH_MS)
 }
 
 initDashboard();
