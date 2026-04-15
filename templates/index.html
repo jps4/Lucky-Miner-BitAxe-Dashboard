@@ -199,8 +199,8 @@
       display: grid;
       grid-template-columns: 0.95fr 0.42fr 1.95fr;
       gap: 10px;
-      min-height: 380px;
-      max-height: 380px;
+      min-height: 390px;
+      max-height: 390px;
       min-width: 0;
     }
 
@@ -236,7 +236,7 @@
 
     .table-wrapper,
     .mini-table-wrapper {
-      overflow: auto;
+      overflow: visible;
       flex: 1;
       min-height: 0;
       min-width: 0;
@@ -856,13 +856,13 @@
   <!-- MOBILE TOP BAR -->
   <div class="mobile-topbar">
     <select id="mobileRangeSelect" class="mobile-range-select">
-      <option value="today" selected>Hoy</option>
-      <option value="7d">Últimos 7 días</option>
-      <option value="1m">Último mes</option>
-      <option value="3m">Últimos 3 meses</option>
-      <option value="6m">Últimos 6 meses</option>
-      <option value="1y">Último año</option>
-      <option value="all">Todo</option>
+      <option value="today" selected>Today</option>
+      <option value="7d">Last 7 days</option>
+      <option value="1m">Last month</option>
+      <option value="3m">Last 3 months</option>
+      <option value="6m">Last 6 months</option>
+      <option value="1y">Last year</option>
+      <option value="all">All</option>
     </select>
     <div id="timeRange">Cargando rango temporal...</div>
   </div>
@@ -870,15 +870,15 @@
   <!-- DESKTOP KPI ROW -->
   <div class="kpi-row desktop-only">
     <div class="kpi-card" id="card-kpi-total">
-      <div class="kpi-title">Total ocurrencias</div>
+      <div class="kpi-title">Total hits</div>
       <div class="kpi-value" id="kpi-total">-</div>
     </div>
     <div class="kpi-card" id="card-kpi-best">
-      <div class="kpi-title">Mejor dificultad</div>
+      <div class="kpi-title">Best diff</div>
       <div class="kpi-value" id="kpi-best">-</div>
     </div>
     <div class="kpi-card" id="card-kpi-last1m">
-      <div class="kpi-title">Último hit ≥ 1M</div>
+      <div class="kpi-title">Last hit ≥ 1M</div>
       <div class="kpi-value" id="kpi-last1m">-</div>
     </div>
     <div class="kpi-card" id="card-kpi-1g">
@@ -886,15 +886,15 @@
       <div class="kpi-value" id="kpi-1g">-</div>
     </div>
     <div class="kpi-card" id="card-kpi-hashrate">
-      <div class="kpi-title">Hashrate medio</div>
+      <div class="kpi-title">Average hashrate</div>
       <div class="kpi-value" id="kpi-hashrate">0</div>
     </div>
     <div class="kpi-card" id="card-kpi-lucktop10">
-      <div class="kpi-title">Luck (top 10)</div>
+      <div class="kpi-title">Luck (weighted top 10)</div>
       <div class="kpi-value kpi-luck" id="kpi-lucktop10">0</div>
     </div>
     <div class="kpi-card" id="card-kpi-newhits">
-      <div class="kpi-title">Nuevos desde carga</div>
+      <div class="kpi-title">New from loading</div>
       <div class="kpi-value" id="kpi-newhits">0</div>
     </div>
   </div>
@@ -902,7 +902,7 @@
   <!-- DESKTOP CONTROLS -->
   <div class="controls-row desktop-only">
     <div id="rangeButtonsDesktop">
-      <button data-range="today" class="active">Hoy</button>
+      <button data-range="today" class="active">Today</button>
       <button data-range="7d">7d</button>
       <button data-range="1m">1m</button>
       <button data-range="3m">3m</button>
@@ -917,7 +917,7 @@
   <div class="top-row desktop-only">
     <div class="panel">
       <h3 class="section-title-with-status">
-        Sesión actual
+        Current session
       </h3>
 
       <!-- Tabs de mineros -->
@@ -929,12 +929,6 @@
     </div>
 
     <div class="panel recent-hits-panel" id="recent-hits-panel-desktop">
-      <!-- <h3>Últimos hits</h3>
-      <div class="mini-table-wrapper standalone-hits">
-        <table id="recent-hits-table">
-          <tbody></tbody>
-        </table>
-      </div> -->
       <div class="hits-tabs">
         <div class="hits-tab active" data-tab="recent">Last</div>
         <div class="hits-tab" data-tab="best">Best</div>
@@ -948,7 +942,7 @@
     </div>
 
     <div class="panel">
-      <h3>Ocurrencias en el tiempo</h3>
+      <h3>Hits by time</h3>
       <div class="chart-wrapper">
         <canvas id="timelineChart"></canvas>
       </div>
@@ -957,7 +951,7 @@
 
   <!-- DESKTOP BOTTOM -->
   <div class="panel bottom-row desktop-only">
-    <h3>Distribución de dificultades</h3>
+    <h3>Diffs distribution</h3>
     <div class="chart-wrapper">
       <canvas id="difficultyChart"></canvas>
     </div>
@@ -970,15 +964,15 @@
     <div class="mobile-view active" data-view="kpis">
       <div class="mobile-kpis-grid">
         <div class="kpi-card" id="card-kpi-total-mobile">
-          <div class="kpi-title">Total ocurrencias</div>
+          <div class="kpi-title">Total hits</div>
           <div class="kpi-value" id="kpi-total-mobile">-</div>
         </div>
         <div class="kpi-card" id="card-kpi-best-mobile">
-          <div class="kpi-title">Mejor dificultad</div>
+          <div class="kpi-title">Best diff</div>
           <div class="kpi-value" id="kpi-best-mobile">-</div>
         </div>
         <div class="kpi-card" id="card-kpi-last1m-mobile">
-          <div class="kpi-title">Último hit ≥ 1M</div>
+          <div class="kpi-title">Last hit ≥ 1M</div>
           <div class="kpi-value" id="kpi-last1m-mobile">-</div>
         </div>
         <div class="kpi-card" id="card-kpi-1g-mobile">
@@ -986,11 +980,11 @@
           <div class="kpi-value" id="kpi-1g-mobile">-</div>
         </div>
         <div class="kpi-card" id="card-kpi-hashrate-mobile">
-          <div class="kpi-title">Hashrate medio</div>
+          <div class="kpi-title">Average hashrate</div>
           <div class="kpi-value" id="kpi-hashrate-mobile">0</div>
         </div>
         <div class="kpi-card" id="card-kpi-lucktop10-mobile">
-          <div class="kpi-title">Luck (top 10)</div>
+          <div class="kpi-title">Luck (weighted top 10)</div>
           <div class="kpi-value kpi-luck" id="kpi-lucktop10-mobile">0</div>
         </div>
         <!-- <div class="kpi-card" id="card-kpi-newhits-mobile">
@@ -1003,11 +997,6 @@
     <!-- REALTIME -->
     <div class="mobile-view" data-view="realtime">
       <div class="panel">
-        <!-- <h3 class="section-title-with-status">
-          Sesión actual
-          <span id="session-status-indicator-mobile" class="section-status-dot" title="Esperando datos..."></span>
-        </h3> -->
-
         <!-- Tabs de mineros -->
         <div id="miners-tabs-mobile" class="miners-tabs"></div>
 
@@ -1019,14 +1008,6 @@
 
     <!-- RECENT HITS -->
     <div class="mobile-view" data-view="recent">
-      <!-- <div class="panel recent-hits-panel" id="recent-hits-panel-mobile">
-        <h3>Últimos hits</h3>
-        <div class="mini-table-wrapper standalone-hits">
-          <table id="recent-hits-table-mobile">
-            <tbody></tbody>
-          </table>
-        </div>
-      </div> -->
       <div class="hits-tabs">
         <div class="hits-tab active" data-tab="recent">Last</div>
         <div class="hits-tab" data-tab="best">Best</div>
@@ -1042,7 +1023,7 @@
     <!-- TIMELINE -->
     <div class="mobile-view" data-view="timeline">
       <div class="panel mobile-chart-panel">
-        <h3>Ocurrencias en el tiempo</h3>
+        <h3>Hits by time</h3>
         <div class="chart-wrapper">
           <canvas id="timelineChartMobile"></canvas>
         </div>
@@ -1052,7 +1033,7 @@
     <!-- DISTRIBUTION -->
     <div class="mobile-view" data-view="distribution">
       <div class="panel mobile-chart-panel">
-        <h3>Distribución de dificultades</h3>
+        <h3>Diffs distribution</h3>
         <div class="chart-wrapper">
           <canvas id="difficultyChartMobile"></canvas>
         </div>
@@ -1063,9 +1044,9 @@
   <!-- MOBILE BOTTOM BAR -->
   <div class="mobile-bottombar">
     <button class="view-tab active" data-view="kpis">KPIs</button>
-    <button class="view-tab" data-view="realtime">Sesión</button>
+    <button class="view-tab" data-view="realtime">Session</button>
     <button class="view-tab" data-view="recent">Hits</button>
-    <button class="view-tab" data-view="timeline">Tiempo</button>
+    <button class="view-tab" data-view="timeline">Time</button>
     <button class="view-tab" data-view="distribution">Dist</button>
   </div>
 
@@ -1104,8 +1085,8 @@ const difficultyRanges = [
 ];
 
 const MAX_HISTORY_ITEMS = 500000;
-const REALTIME_REFRESH_MS = 10000;
-const HISTORY_REFRESH_MS = 30000;
+const REALTIME_REFRESH_MS = 5000;
+const HISTORY_REFRESH_MS = 20000;
 const MOBILE_VIEWS = ['kpis', 'realtime', 'recent', 'timeline', 'distribution'];
 const SWIPE_THRESHOLD = 55;
 const SWIPE_MAX_VERTICAL = 50;
@@ -2026,8 +2007,8 @@ function actualizarKPIs(filteredData, newData = false) {
       suffix: '%',
       separator: ','
     });
-    document.querySelector("#kpi-lucktop10").style.color = luckToHsl(luck);
-    document.querySelector("#kpi-lucktop10-mobile").style.color = luckToHsl(luck);
+    document.getElementById("kpi-lucktop10").style.color = luckToHsl(luck);
+    document.getElementById("kpi-lucktop10-mobile").style.color = luckToHsl(luck);
 
     if (best > -Infinity) {
       const bestFmt = formatSuffixNumber(best, [
@@ -2251,7 +2232,7 @@ function createDifficultyChart(canvasId) {
     data: {
       labels: difficultyRanges.map(r => r.label),
       datasets: [{
-        label: 'Número de dificultades',
+        // label: 'Número de dificultades',
         data: [],
         backgroundColor: 'lime',
         borderColor: 'green',
@@ -2297,7 +2278,8 @@ function createDifficultyChart(canvasId) {
       },
       plugins: {
         legend: {
-          labels: { color: 'lime', font: { size: 11 } }
+          display: false
+          // labels: { color: 'lime', font: { size: 11 } }
         },
         datalabels: {
           color: 'lime',
@@ -2340,7 +2322,7 @@ function createTimelineChart(canvasId) {
     data: {
       labels: [],
       datasets: [{
-        label: 'Ocurrencias',
+        // label: 'Hits',
         data: [],
         borderColor: 'lime',
         backgroundColor: 'rgba(0,255,0,0.15)',
@@ -2387,7 +2369,8 @@ function createTimelineChart(canvasId) {
       },
       plugins: {
         legend: {
-          labels: { color: 'lime', font: { size: 11 } }
+          display: false
+          // labels: { color: 'lime', font: { size: 11 } }
         },
         datalabels: { display: false }
       }
@@ -2432,7 +2415,7 @@ function renderCharts(filteredData) {
   };
 
   const desktopText =
-    `Datos desde ${firstTime.toLocaleString(undefined, desktopOptions)} hasta ${lastTime.toLocaleString(undefined, desktopOptions)} · ${filteredData.length} ocurrencias`;
+    `Data from ${firstTime.toLocaleString(undefined, desktopOptions)} to ${lastTime.toLocaleString(undefined, desktopOptions)} · ${filteredData.length} hits`;
 
   const mobileText =
     `${formatCompactDateTime(firstTime)} - ${formatCompactDateTime(lastTime)} - ${filteredData.length} hits`;
