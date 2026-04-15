@@ -894,7 +894,7 @@
       <div class="kpi-value kpi-luck" id="kpi-lucktop10">0</div>
     </div>
     <div class="kpi-card" id="card-kpi-newhits">
-      <div class="kpi-title">New from loading</div>
+      <div class="kpi-title">New</div>
       <div class="kpi-value" id="kpi-newhits">0</div>
     </div>
   </div>
@@ -1262,7 +1262,7 @@ function formatRelativeTime(timestamp) {
   if (days > 0) return `${days}d`;
   if (hours > 0) return `${hours}h`;
   if (mins > 0) return `${mins}m`;
-  return "Ahora";
+  return "Now";
 }
 
 function formatCompactDateTime(date) {
@@ -2174,10 +2174,10 @@ function getBucketFormat(range, dataLength) {
 
 function getBucketLabelDescription(format) {
   switch (format) {
-    case "YYYY-MM-DD HH:00": return "agrupado por hora";
-    case "YYYY-MM-DD": return "agrupado por día";
-    case "YYYY-[W]WW": return "agrupado por semana";
-    case "YYYY-MM": return "agrupado por mes";
+    case "YYYY-MM-DD HH:00": return "by hour";
+    case "YYYY-MM-DD": return "by day";
+    case "YYYY-[W]WW": return "by week";
+    case "YYYY-MM": return "by month";
     default: return "";
   }
 }
@@ -2258,7 +2258,7 @@ function createDifficultyChart(canvasId) {
           },
           title: {
             display: true,
-            text: 'Cantidad',
+            text: 'Hits',
             color: 'lime',
             font: { size: 12 }
           }
@@ -2270,7 +2270,7 @@ function createDifficultyChart(canvasId) {
           },
           title: {
             display: true,
-            text: 'Rangos de dificultad',
+            text: 'Diff ranges',
             color: 'lime',
             font: { size: 12 }
           }
@@ -2345,7 +2345,7 @@ function createTimelineChart(canvasId) {
           },
           title: {
             display: true,
-            text: 'Ocurrencias',
+            text: 'Hits',
             color: 'lime',
             font: { size: 12 }
           }
@@ -2361,7 +2361,7 @@ function createTimelineChart(canvasId) {
           },
           title: {
             display: true,
-            text: 'Tiempo',
+            text: 'Time',
             color: 'lime',
             font: { size: 12 }
           }
@@ -2387,14 +2387,14 @@ function updateTimelineChart(filteredData) {
   if (timelineChart) {
     timelineChart.data.labels = labels;
     timelineChart.data.datasets[0].data = values;
-    timelineChart.options.scales.x.title.text = `Tiempo (${getBucketLabelDescription(bucketFormat)})`;
+    timelineChart.options.scales.x.title.text = `Time (${getBucketLabelDescription(bucketFormat)})`;
     timelineChart.update('none');
   }
 
   if (timelineChartMobile) {
     timelineChartMobile.data.labels = labels;
     timelineChartMobile.data.datasets[0].data = values;
-    timelineChartMobile.options.scales.x.title.text = `Tiempo (${getBucketLabelDescription(bucketFormat)})`;
+    timelineChartMobile.options.scales.x.title.text = `Time (${getBucketLabelDescription(bucketFormat)})`;
     timelineChartMobile.update('none');
   }
 }
