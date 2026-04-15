@@ -2,7 +2,11 @@
 
 Implements a Miner Dashboard (BitAxe / Lucky Miner) to show all current and historical data. Works for both mobile and desktop
 
-<img width="1906" height="929" alt="image" src="https://github.com/user-attachments/assets/dcf15e14-3fe0-41e3-bb61-dad34439244b" />
+<img width="1915" height="927" alt="image" src="https://github.com/user-attachments/assets/c01b0b86-33c9-43c7-b802-8091488a5358" />
+<img width="380" height="655" alt="image" src="https://github.com/user-attachments/assets/d9c47062-2939-44be-859d-7a5fcb936386" />
+<img width="302" height="525" alt="image" src="https://github.com/user-attachments/assets/e78c6a18-cfb6-414c-9303-c9b193cd3b3a" />
+
+
 
 Data from Miner is retrieved via WebSockets and REST call. Python backend provides two endpoints, <b>/data<b> to obtain real time statistics from
 Miner, and <b>/history</b>, which exports a list of obtained difficulties (greater than 10K) and timestamp.
