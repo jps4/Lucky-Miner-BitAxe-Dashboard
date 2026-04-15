@@ -2288,6 +2288,11 @@ function createDifficultyChart(canvasId) {
           font: { weight: 'bold', size: 10 },
           formatter: value => value > 0 ? value : ''
         }
+      },
+      layout: {
+        padding: {
+          top: 20
+        }
       }
     },
     plugins: [ChartDataLabels]
@@ -2373,6 +2378,11 @@ function createTimelineChart(canvasId) {
           // labels: { color: 'lime', font: { size: 11 } }
         },
         datalabels: { display: false }
+      },
+      layout: {
+        padding: {
+          top: 20
+        }
       }
     }
   });
