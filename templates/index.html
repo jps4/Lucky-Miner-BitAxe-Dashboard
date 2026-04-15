@@ -695,17 +695,17 @@
       }
 
       .mobile-kpis-grid {
-        display: grid;
+        display: inline-grid;
         grid-template-columns: 1fr;
         gap: 8px;
-        height: 100%;
+        /* height: 100%; */
         min-height: 0;
         min-width: 0;
-        overflow: auto;
+        overflow: scroll;
       }
 
       .mobile-kpis-grid .kpi-card {
-        min-height: 0;
+        min-height: 50px;
         padding: 10px;
       }
 
@@ -799,6 +799,7 @@
       }
 
       .mobile-kpis-grid .kpi-card {
+        min-height: 50px;
         padding: 8px;
         border-radius: 8px;
       }
@@ -987,10 +988,10 @@
           <div class="kpi-title">Luck (weighted top 10)</div>
           <div class="kpi-value kpi-luck" id="kpi-lucktop10-mobile">0</div>
         </div>
-        <!-- <div class="kpi-card" id="card-kpi-newhits-mobile">
+        <div class="kpi-card" id="card-kpi-newhits-mobile">
           <div class="kpi-title">Nuevos desde carga</div>
           <div class="kpi-value" id="kpi-newhits-mobile">0</div>
-        </div> -->
+        </div>
       </div>
     </div>
 
@@ -1406,7 +1407,7 @@ function animateElementClass(el, className, duration = 900) {
 
 function flashNewHitUI() {
   animateElementClass(document.getElementById('card-kpi-newhits'), 'kpi-newhits-burst', 1200);
-  // animateElementClass(document.getElementById('card-kpi-newhits-mobile'), 'kpi-newhits-burst', 1200);
+  animateElementClass(document.getElementById('card-kpi-newhits-mobile'), 'kpi-newhits-burst', 1200);
   animateElementClass(document.getElementById('card-kpi-lucktop10'), 'kpi-lucktop10', 1200);
   animateElementClass(document.getElementById('card-kpi-lucktop10-mobile'), 'kpi-lucktop10-mobile', 1200);
 
@@ -1433,6 +1434,13 @@ function luckToHsl(luck) {
   const lightness = 45;
 
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+async function getBchDifficulty() {
+  const res = await fetch("https://api.blockchair.com/bitcoin-cash/stats");
+  const data = await res.json();
+
+  return data.data.difficulty;
 }
 
 /* =========================
@@ -1569,8 +1577,8 @@ async function mergeHistoryData(newItems, countAsNewHits = false, persist = true
 
     if (countAsNewHits) {
       newHitsSinceLoad += added;
-      // animateCountUpBoth("kpi-newhits", "kpi-newhits-mobile", newHitsSinceLoad, {
-      animateCountUpElement("kpi-newhits", newHitsSinceLoad, {
+      animateCountUpBoth("kpi-newhits", "kpi-newhits-mobile", newHitsSinceLoad, {
+      // animateCountUpElement("kpi-newhits", newHitsSinceLoad, {
         duration: 0.9,
         decimals: 0,
         separator: ','
