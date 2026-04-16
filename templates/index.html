@@ -1767,8 +1767,12 @@ function renderRealtimeTable(data) {
       const tdKey = document.createElement('td');
       tdKey.textContent = field;
 
+      let value = data[field]
+      if (field === "Best diff ever" && typeof value === "number")
+        value = formatDifficulty(value)
+
       const tdValue = document.createElement('td');
-      tdValue.textContent = data[field] ?? "-";
+      tdValue.textContent = value ?? "-";
 
       tr.appendChild(tdKey);
       tr.appendChild(tdValue);
