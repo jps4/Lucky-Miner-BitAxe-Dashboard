@@ -49,7 +49,7 @@ MINERS = [
     },
     {
         "name": "BitAxe Gamma 601",
-        "ip": "192.168.1.81",
+        "ip": "192.168.1.108",
         "id": 1,
         "miner_data": {
             **DEFAULT_MINER_DATA
@@ -285,6 +285,7 @@ def sigint_signal(sig, frame):
 signal.signal(signal.SIGINT, sigint_signal)
 
 current_diff_pattern = re.compile(r"asic_result: Nonce difficulty (\d+\.?\d*) of (\d+\.?\d*)")
+current_diff_pattern2 = re.compile(r"asic_result:.*?diff\s+(\d+\.?\d*)\s+of\s+(\d+\.?\d*)")
 
 def print_data(miner_data, miner_info):
     # data1 = f"Wifi status: {miner_info['wifiStatus']}"
@@ -410,6 +411,8 @@ async def listen_miner(miner, queue):
                         break
                     miner_info['timestamp'] = int(time.time())
                     found_diff = current_diff_pattern.search(message)
+                    if not found_diff:
+                        found_diff = current_diff_pattern2.search(message)
                     if found_diff:
                         miner_data['last_diff'] = float(found_diff.group(1))
                         if miner_data['last_diff'] > miner_data['best_diff']:
