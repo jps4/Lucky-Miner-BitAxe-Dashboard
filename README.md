@@ -2,7 +2,8 @@
 
 Implements a Miner Dashboard (BitAxe / Lucky Miner) to show all current and historical data. Works for both mobile and desktop
 
-<img width="1915" height="927" alt="image" src="https://github.com/user-attachments/assets/c01b0b86-33c9-43c7-b802-8091488a5358" />
+<img width="1914" height="917" alt="image" src="https://github.com/user-attachments/assets/5696f25a-e0d9-4380-a2e9-7e0cf75530df" />
+
 <img width="380" height="655" alt="image" src="https://github.com/user-attachments/assets/d9c47062-2939-44be-859d-7a5fcb936386" />
 <img width="302" height="525" alt="image" src="https://github.com/user-attachments/assets/e78c6a18-cfb6-414c-9303-c9b193cd3b3a" />
 
