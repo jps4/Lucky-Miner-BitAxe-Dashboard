@@ -25,4 +25,6 @@ Frontend renders a complete dashboard on desktop devices, including:
 - Latest best difficulties
 - Graphs with occurrences and distribution of difficulties (logaritmic y-axis to show Poisson-distribution shape)
 
-All information could be set to several time ranges (today, last 7 days, month...)
+All information could be set to several time ranges (today, last 7 days, month...).
+
+All the system is though to run in a low-resource system, like a Raspbery Pi :) (so, Vanila JS, no frameworks!)
