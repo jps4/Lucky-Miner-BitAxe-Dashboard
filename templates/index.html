@@ -304,6 +304,19 @@
       font-weight: bold;
     }
 
+    .hit {
+      transform: scale(0.95);
+      opacity: 0.6;
+      text-shadow: 0 0 3px currentColor;
+      transition: all 0.2s ease;
+    }
+
+    .hit-active-miner {
+      transform: scale(1);
+      font-weight: 600;
+      opacity: 1;
+}
+
     tr.new-hit-row {
       animation: newHitRow 1.2s ease;
     }
@@ -1820,6 +1833,7 @@ function renderMinerTabs(dataArray) {
         selectedMinerIndex = index;
         renderMinerTabs(dataArray);
         renderRealtimeTable(dataArray[selectedMinerIndex]);
+        renderHitsTable(currentFilteredData, 0)
       };
 
       container.appendChild(tab);
@@ -2161,6 +2175,11 @@ function renderHitsTable(filteredData, newRowsCount = 0) {
       const tdDiff = document.createElement('td');
       tdDiff.textContent = formatDifficulty(item.d);
 
+      if ( item.m === selectedMinerIndex)
+        tdDiff.classList.add('hit-active-miner');
+      else
+        tdDiff.classList.add('hit');
+        
       if (item.d >= 1e9) tdDiff.classList.add('hit-high');
       if (selectedHitsTab === "best") {
         if (i === 0) tdDiff.textContent = tdDiff.textContent + " 🥇";
