@@ -40,6 +40,7 @@ MINERS = [
         "name": "Lucky Miner LV06",
         "ip": "192.168.1.80",
         "id": 0,
+        "enabled": False,
         "miner_data": {
             **DEFAULT_MINER_DATA
         },
@@ -48,9 +49,10 @@ MINERS = [
         }
     },
     {
-        "name": "BitAxe Gamma 601",
+        "name": "BitAxe-1 Gamma 601",
         "ip": "192.168.1.108",
         "id": 1,
+        "enabled": True,
         "miner_data": {
             **DEFAULT_MINER_DATA
         },
@@ -58,6 +60,18 @@ MINERS = [
             **DEFAULT_MINER_INFO
         }
     },
+    {
+        "name": "BitAxe-2 Gamma 601",
+        "ip": "192.168.1.109",
+        "id": 2,
+        "enabled": True,
+        "miner_data": {
+            **DEFAULT_MINER_DATA
+        },
+        "miner_info": {
+            **DEFAULT_MINER_INFO
+        }
+    }
 ]
 
 
@@ -274,7 +288,7 @@ def data_get():
 
 @app.route("/v2/data", methods=["GET"])
 def v2_data_get():
-    return jsonify({ "items": [ data_get_miner(miner) for miner in MINERS]})
+    return jsonify({ "items": [ data_get_miner(miner) for miner in MINERS if miner['enabled']]})
 
 
 def sigint_signal(sig, frame):
@@ -486,7 +500,7 @@ async def main():
     writer = asyncio.create_task(writer_task(queue))
     listeners = [
         asyncio.create_task(listen_miner(miner, queue))
-        for miner in MINERS
+        for miner in MINERS if miner['enabled']
     ]
 
     await asyncio.gather(writer, *listeners)

@@ -1694,8 +1694,8 @@ async function actualizarTiempoReal() {
       "Uptime": "6d 14h"
     };
     const minersData = [
-      { ...mockRealtime, "Miner id": 0, "Miner name": "Lucky Miner LV06", "Best diff": "1.23G" },
-      { ...mockRealtime, "Miner id": 1, "Miner name": "BitAxe Gamma 601", "Best diff": "67.86G" }
+      { ...mockRealtime, "Miner id": 1, "enabled": true, "Miner name": "BitAxe-1 Gamma 601", "Best diff": "1.26M" },
+      { ...mockRealtime, "Miner id": 2, "enabled": true, "Miner name": "BitAxe-2 Gamma 601", "Best diff": "7.86M" }
     ]
     renderMinerTabs(minersData);
     renderRealtimeTable(minersData[selectedMinerIndex]);
@@ -1797,7 +1797,7 @@ function renderRealtimeTable(data) {
   renderInto('realtime-table', fieldsToShow);
   renderInto('realtime-table-mobile', fieldsToShow);
 
-  updateSessionStatusIndicators(latestSessionTimestamps[miner_id]);
+  updateSessionStatusIndicators(latestSessionTimestamps[selectedMinerIndex], selectedMinerIndex);
 }
 
 function renderMinerTabs(dataArray) {
@@ -1812,7 +1812,7 @@ function renderMinerTabs(dataArray) {
 
     dataArray.forEach((miner, index) => {
       miner_id = miner['Miner id']
-      latestSessionTimestamps[miner_id] = miner["Timestamp"] ?? null;
+      latestSessionTimestamps[index] = miner["Timestamp"] ?? null;
 
       const tab = document.createElement('div');
       tab.className = 'miner-tab' + (index === selectedMinerIndex ? ' active' : '');
@@ -1837,7 +1837,7 @@ function renderMinerTabs(dataArray) {
       };
 
       container.appendChild(tab);
-      updateSessionStatusIndicators(latestSessionTimestamps[miner_id], index)
+      updateSessionStatusIndicators(latestSessionTimestamps[index], index)
     });
   });
 }
@@ -2175,7 +2175,7 @@ function renderHitsTable(filteredData, newRowsCount = 0) {
       const tdDiff = document.createElement('td');
       tdDiff.textContent = formatDifficulty(item.d);
 
-      if ( item.m === selectedMinerIndex)
+      if ( item.m === selectedMinerIndex+1)
         tdDiff.classList.add('hit-active-miner');
       else
         tdDiff.classList.add('hit');
