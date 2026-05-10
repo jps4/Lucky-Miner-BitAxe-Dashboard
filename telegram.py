@@ -10,6 +10,12 @@ def start_of_day_utc():
     now = datetime.now(timezone.utc)
     return int(datetime(now.year, now.month, now.day, tzinfo=timezone.utc).timestamp())
 
+LOCAL_TZ = ZoneInfo("Europe/Madrid")
+
+def start_of_day_local_to_utc():
+    now_local = datetime.now(LOCAL_TZ)
+    start_local = datetime(now_local.year, now_local.month, now_local.day, tzinfo=LOCAL_TZ)
+    return int(start_local.timestamp())
 
 TOKEN = os.getenv("TOKEN_ID")
 CHAT_ID = int(os.getenv("CHAT_ID"))
@@ -104,10 +110,24 @@ def human_readable_diff(diff):
 
     return '%.2fG' % (diff / 1000000000)
 
+def human_readable_timediff(secs):
+    hours = int(secs // 3600)
+    mins = int((secs % 3600) // 60)
+    secs = int(secs % 60)
+
+    if hours > 0:
+        return f"{hours:02d}h {mins:02d}m {secs:02d}s"
+    elif mins > 0:
+        return f"{hours:02d}h {mins:02d}m {secs:02d}s"
+    else:
+        return f"{secs:02d}s"
+
 def format_miner(miner):
+    now = datetime.now(timezone.utc).timestamp()
+
     return (
         f"⛏ <b>{miner['Miner name']}</b>\n"
-        f"ID: {miner['Miner id']}\n\n"
+        f"ID: {miner['Miner id']} - {human_readable_timediff(now - miner["Timestamp"])} ago\n\n"
         f"⚡ Hashrate: {miner['Reported Hashrate']}\n"
         f"🔥 Best diff: {miner['Best diff']}\n"
         f"🏆 Best ever: {human_readable_diff(miner['Best diff ever'])}\n"
@@ -138,7 +158,7 @@ def system_status():
 
 def handle_top():
     try:
-        day_ts = start_of_day_utc()
+        day_ts = start_of_day_local_to_utc()
         data = get_history(day_ts)
 
         if not data:
@@ -150,7 +170,7 @@ def handle_top():
         msg = ["🏆 <b>TOP 5 TODAY</b>\n"]
 
         for i, item in enumerate(top5, 1):
-            ts_local = datetime.fromtimestamp(item["t"], tz=ZoneInfo("Europe/Madrid"))
+            ts_local = datetime.fromtimestamp(item["t"], tz=LOCAL_TZ)
             msg.append(f"{i}. 🔥 {human_readable_diff(item['d'])}  (Miner {item['m']} - ⏱ {ts_local.strftime('%H:%M:%S')})\n")
 
         return "\n".join(msg)
