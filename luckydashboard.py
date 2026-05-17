@@ -40,7 +40,7 @@ MINERS = [
         "name": "Lucky Miner LV06",
         "ip": "192.168.1.80",
         "id": 0,
-        "enabled": False,
+        "enabled": True,
         "miner_data": {
             **DEFAULT_MINER_DATA
         },
