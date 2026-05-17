@@ -199,8 +199,8 @@
       display: grid;
       grid-template-columns: 0.95fr 0.42fr 1.95fr;
       gap: 10px;
-      min-height: 390px;
-      max-height: 390px;
+      min-height: 400px;
+      max-height: 400px;
       min-width: 0;
     }
 
@@ -236,7 +236,8 @@
 
     .table-wrapper,
     .mini-table-wrapper {
-      overflow-y: scroll;
+      overflow-y: visible;
+      touch-action: pan-y;
       flex: 1;
       min-height: 0;
       min-width: 0;
@@ -536,7 +537,7 @@
     .miners-tabs {
       display: flex;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 0px;
     }
 
     .miner-tab {
@@ -861,6 +862,10 @@
         line-height: 1.05;
         border-radius: 7px;
       }
+
+      .miners-tabs {
+        gap: 0px;
+      }
     }
   </style>
 </head>
@@ -1102,6 +1107,13 @@ const fieldsToShow = [
   "Total shares",
   "Uptime"
 ];
+
+const fieldsTranslation = {
+  "Best diff ever": "Best ever",
+  "Current session": "Session",
+  "Reported Hashrate": "Md Hashrate",
+  "Total shares": "Tot shares"
+};
 
 const difficultyRanges = [
   { label: "≥ 1T", min: 1e12 },
@@ -1770,7 +1782,7 @@ function tickSessionStatus() {
 
 function renderRealtimeTable(data) {
 
-  const renderInto = (tableId, fields) => {
+  const renderInto = (tableId, fields, translate) => {
     const table = document.getElementById(tableId);
     if (!table) return;
 
@@ -1779,7 +1791,7 @@ function renderRealtimeTable(data) {
     fields.forEach(field => {
       const tr = document.createElement('tr');
       const tdKey = document.createElement('td');
-      tdKey.textContent = field;
+      tdKey.textContent = translate ? (fieldsTranslation[field] || field) : field;
 
       let value = data[field]
       if (field === "Best diff ever" && typeof value === "number")
@@ -1794,8 +1806,8 @@ function renderRealtimeTable(data) {
     });
   };
 
-  renderInto('realtime-table', fieldsToShow);
-  renderInto('realtime-table-mobile', fieldsToShow);
+  renderInto('realtime-table', fieldsToShow, false);
+  renderInto('realtime-table-mobile', fieldsToShow, true);
 
   updateSessionStatusIndicators(latestSessionTimestamps[selectedMinerIndex], selectedMinerIndex);
 }
@@ -2175,7 +2187,7 @@ function renderHitsTable(filteredData, newRowsCount = 0) {
       const tdDiff = document.createElement('td');
       tdDiff.textContent = formatDifficulty(item.d);
 
-      if ( item.m === selectedMinerIndex+1)
+      if ( item.m === selectedMinerIndex)
         tdDiff.classList.add('hit-active-miner');
       else
         tdDiff.classList.add('hit');
