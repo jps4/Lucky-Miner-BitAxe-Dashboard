@@ -65,6 +65,7 @@ def send_main_menu():
     keyboard = {
         "inline_keyboard": [
             [
+                {"text": "⛏ LUCKY 0  ", "callback_data": "miner_0"},
                 {"text": "⛏ BITAXE 1  ", "callback_data": "miner_1"},
                 {"text": "⛏ BITAXE 2  ", "callback_data": "miner_2"},
             ],
@@ -100,6 +101,8 @@ def get_history(day_ts):
 # -------------------------
 def human_readable_diff(diff):
     '''Returns a human readable representation of hashrate.'''
+    if isinstance(diff, str):
+        return diff
 
     if diff < 1000:
         return '%.2f' % diff
@@ -207,16 +210,13 @@ def handle_callback(data):
 
         if data.startswith("miner_"):
             miner_id = int(data.split("_")[1])
-
             items = get_data()
-
             miner = next((m for m in items if m["Miner id"] == miner_id), None)
-
-            if not miner:
+            if miner is None:
                 send_message("❌ Miner not found")
-                return
+            else:
+                send_message(format_miner(miner))
 
-            send_message(format_miner(miner))
             return
 
         if data == "restart_dashboard":
