@@ -228,6 +228,64 @@
       border-color: rgba(127,255,127,0.45);
     }
 
+    #realtime-table {
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    #realtime-table .col-key{
+      width: 35%;
+    }
+    #realtime-table-mobile .col-key{
+      width: 35%;
+    }
+    #realtime-table .col-value{
+      width: 65%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #realtime-table-mobile .col-value{
+      width: 65%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #realtime-table .col-value-link {
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+    }
+
+    .percentage-bar {
+      width: 75%;
+      height: 15px;
+      background: #2a2a2a;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .percentage-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .bar-fill.high {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+    }
+
+    .bar-fill.medium {
+      background: linear-gradient(90deg, #f59e0b, #facc15);
+    }
+
+    .percentage-bar-text {
+      margin-left: 8px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
     @keyframes panelFlash {
       0%   { box-shadow: 0 0 0 rgba(0,255,0,0); transform: scale(1); }
       30%  { box-shadow: 0 0 22px rgba(0,255,0,0.22); transform: scale(1.01); }
@@ -1093,19 +1151,18 @@
    CONFIG
 ========================= */
 const fieldsToShow = [
-  "Best diff",
-  "Best diff ever",
+  "Ip",
+  ["Best diff", "Best diff ever"],
   "Current session",
-  "Hashrate",
-  "Last diff",
+  ["Hashrate", "Reported Hashrate"],
+  ["Last diff", "Pool diff"],
   "Pool",
-  "Pool diff",
+  "User",
   "Power",
-  "Reported Hashrate",
-  "Shares",
+  ["Shares", "Total shares"],
   "Temp",
-  "Total shares",
-  "Uptime"
+  "FanSpeed",
+  "Uptime",
 ];
 
 const fieldsTranslation = {
@@ -1791,14 +1848,74 @@ function renderRealtimeTable(data) {
     fields.forEach(field => {
       const tr = document.createElement('tr');
       const tdKey = document.createElement('td');
-      tdKey.textContent = translate ? (fieldsTranslation[field] || field) : field;
+      const tdValue = document.createElement("td");
+      tdKey.className = "col-key";
+      tdValue.className = "col-value";
 
-      let value = data[field]
-      if (field === "Best diff ever" && typeof value === "number")
-        value = formatDifficulty(value)
+      if (Array.isArray(field)) {
+        const [...valueFields] = field;
+        const labelField = valueFields[0]
+        const label = translate ? (fieldsTranslation[labelField] || labelField) : labelField;
+        tdKey.textContent = label;
 
-      const tdValue = document.createElement('td');
-      tdValue.textContent = value ?? "-";
+        const values = valueFields.map(f => {
+          let v = data[f];
+          if (f === "Best diff ever" && typeof v === "number") {
+            v = formatDifficulty(v);
+          }
+          return v ?? "-";
+        });
+
+        tdValue.textContent = values.join(" / ");
+      }
+      else{
+        tdKey.textContent = translate ? (fieldsTranslation[field] || field) : field;
+
+        let value = data[field]
+        if (field === "Best diff ever" && typeof value === "number")
+            value = formatDifficulty(value)
+
+        tdValue.textContent = value ?? "-";
+
+        if (field === "Ip" && value) {
+          const url = `http://${value}`;
+          tr.style.cursor = "pointer";
+          tr.addEventListener("click", () => {
+            window.open(url, "_blank", "noopener,noreferrer");
+          });
+          tdValue.classList.add("col-value-link");
+        }
+        if (field === "User" && value) {
+          const url = `https://bch.solo-pool.org/miner.html?wallet=${value}`
+          tr.style.cursor = "pointer";
+          tr.addEventListener("click", () => {
+            window.open(url, "_blank", "noopener,noreferrer");
+          });
+          tdValue.classList.add("col-value-link");
+        }
+        // if (field === "FanSpeed" && value){
+        //   const valueNum = Number(value.replace("%", ""));
+        //   const container = document.createElement("div");
+        //   container.className = "percentage-bar";
+
+        //   const fill = document.createElement("div");
+        //   fill.className = "percentage-bar-fill";
+        //   if (valueNum >= 80) {
+        //     fill.classList.add("high");
+        //   } else if (valueNum >= 50) {
+        //     fill.classList.add("medium");
+        //   }
+
+        //   fill.style.width = `${valueNum}%`;
+
+        //   const text = document.createElement("span");
+        //   text.className = "percentage-bar-text";
+        //   text.textContent = value;
+        //   container.appendChild(fill);
+        //   tdValue.appendChild(container);
+        //   tdValue.appendChild(text);
+        // }
+      }
 
       tr.appendChild(tdKey);
       tr.appendChild(tdValue);
