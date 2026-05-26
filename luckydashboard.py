@@ -33,6 +33,8 @@ DEFAULT_MINER_INFO = {
     'hashRate': 0.0,
     'sharesAccepted': 0,
     'bestDiff': 0.0,
+    'fanSpeed': 0.0,
+    'user': '-'
 }
 
 MINERS = [
@@ -254,6 +256,7 @@ def history():
 def v2_history():
     return get_history(add_miner=True)
 
+@app.route("/v2/miners")
 def data_get_miner(miner_item):
     miner_data = miner_item['miner_data']
     miner_info = miner_item['miner_info']
@@ -263,6 +266,7 @@ def data_get_miner(miner_item):
                                     miner_data['current_pool_diff_session'])
     ret = {
         'Miner id': miner_item['id'],
+        'Ip': miner_item['ip'],
         'Miner name': miner_item['name'],
         'Timestamp': miner_info.get('timestamp', 0),
         'Uptime': human_readable_timediff(miner_info['uptimeSeconds']),
@@ -277,7 +281,9 @@ def data_get_miner(miner_item):
         'Pool diff': human_readable_diff(miner_data['pool_diff']),
         'Shares': miner_data['shares'],
         'Hashrate': human_readable_hashrate(hashrate),
-        'Current session': human_readable_timediff(miner_data['current_session'])
+        'Current session': human_readable_timediff(miner_data['current_session']),
+        'FanSpeed': f"{human_readable_diff(miner_info['fanspeed'])}%",
+        'User': miner_info['stratumUser']
     }
 
     return ret
@@ -290,6 +296,15 @@ def data_get():
 def v2_data_get():
     return jsonify({ "items": [ data_get_miner(miner) for miner in MINERS if miner['enabled']]})
 
+@app.route("/v2/miners/<int:miner_id>/reset", methods=["POST"])
+def reset_miner(miner_id):
+    miner = next((m for m in MINERS if m['id'] == miner_id), None)
+    if miner is None:
+        return jsonify({ "error": "Miner not found" }), 404
+
+    ip = miner['ip']
+    request.post(f"http://{ip}/api/system/restart", timeout=2)
+    return jsonify({"status": "accepted"}), 202
 
 def sigint_signal(sig, frame):
     print("")
