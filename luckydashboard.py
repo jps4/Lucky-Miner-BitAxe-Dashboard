@@ -206,8 +206,8 @@ def get_history(add_miner):
 
     since_ts = request.args.get("t", type=int)
     if not initialized:
-        cached_data = load_all_data()
-        initialized = True
+        # return empty until initialized
+        return jsonify([])
     else:
         update_incremental()
 
@@ -520,9 +520,16 @@ async def main():
 
     await asyncio.gather(writer, *listeners)
 
+def background_load():
+    global cached_data, initialized, loading
+
+    cached_data = load_all_data()
+    initialized = True
+
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
+    threading.Thread(target=background_load, daemon=True).start()
 
     try:
         asyncio.run(main())
