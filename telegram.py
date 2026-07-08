@@ -75,7 +75,12 @@ def send_main_menu():
             ],
             [
                 {"text": "🔄 RESTART DASHBOARD", "callback_data": "restart_dashboard"}
-            ]
+            ],
+            [
+                {"text": "🔄 RESTART 0  ", "callback_data": "restart_0"},
+                {"text": "🔄 RESTART 1  ", "callback_data": "restart_1"},
+                {"text": "🔄 RESTART 2  ", "callback_data": "restart_2"},
+            ],
         ]
     }
 
@@ -93,6 +98,12 @@ def get_data():
 
 def get_history(day_ts):
     r = requests.get(HISTORY_URL, params={"t": day_ts}, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+def restart_miner(miner_name, miner_ip):
+    send_message(f"🔄 Restarting {miner_name} ({miner_ip})...")
+    r = requests.post(f"http://{miner_ip}/api/system/restart", timeout=5)
     r.raise_for_status()
     return r.json()
 
@@ -222,6 +233,15 @@ def handle_callback(data):
         if data == "restart_dashboard":
             restart_dashboard()
             return
+        
+        if data.startswith("restart_"):
+            miner_id = int(data.split("_")[1])
+            items = get_data()
+            miner = next((m for m in items if m["Miner id"] == miner_id), None)
+            if miner is None:
+                send_message("❌ Miner not found")
+            else:
+                send_message(restart_miner(miner['Miner name'], miner['Ip']))
 
     except Exception as e:
         send_message(f"❌ Error: {e}")
