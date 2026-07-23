@@ -260,7 +260,7 @@ def v2_history():
 def data_get_miner(miner_item):
     miner_data = miner_item['miner_data']
     miner_info = miner_item['miner_info']
-    fan_speed = miner_item.get('fanspeed', 100.0)
+    fan_speed = miner_info.get('fanspeed', 100.0)
 
     hashrate = calculate_hashrate(miner_data['current_shares'],
                                     miner_data['pool_diff'],
