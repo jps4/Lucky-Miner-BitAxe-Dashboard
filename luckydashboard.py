@@ -34,7 +34,8 @@ DEFAULT_MINER_INFO = {
     'sharesAccepted': 0,
     'bestDiff': 0.0,
     'fanSpeed': 0.0,
-    'user': '-'
+    'user': '-',
+    'networkDifficulty': 0.0
 }
 
 MINERS = [
@@ -286,6 +287,8 @@ def data_get_miner(miner_item):
         'FanSpeed': f"{human_readable_diff(fan_speed)}%",
         'User': miner_info.get('stratumUser', '')
     }
+    if miner_info.get('networkDifficulty', 0):
+        ret['NetworkDifficulty'] = miner_info['networkDifficulty']
 
     return ret
 

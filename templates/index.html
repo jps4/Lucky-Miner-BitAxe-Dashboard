@@ -1184,7 +1184,7 @@ const difficultyRanges = [
   { label: "≥ 10K", min: 1e4 }
 ];
 
-const MAX_HISTORY_ITEMS = 500000;
+const MAX_HISTORY_ITEMS = 1000000;
 const REALTIME_REFRESH_MS = 5000;
 const HISTORY_REFRESH_MS = 20000;
 const MOBILE_VIEWS = ['kpis', 'realtime', 'recent', 'timeline', 'distribution'];
@@ -1231,6 +1231,8 @@ let currentFilteredData = [];
 let latestSessionTimestamps = [null, null];
 
 let coinBlockDiff = 0;
+let coinBlockDiffMiner = 0;
+let coinIntervalId = null;
 
 /* =========================
    INDEXEDDB
@@ -1539,6 +1541,11 @@ function luckToHsl(luck) {
 }
 
 async function getCoinDifficulty() {
+  if (coinBlockDiffMiner > 0){
+    clearInterval(coinIntervalId)
+    return;
+  }
+
   const res = await fetch("https://api.blockchair.com/bitcoin-cash/stats");
   const data = await res.json();
 
@@ -1736,6 +1743,14 @@ function generarMockData() {
   return data.sort((a, b) => a.t - b.t);
 }
 
+function getFirstNetworkDifficulty(data) {
+  const item = data.items.find(
+    item => item.NetworkDifficulty !== undefined
+  );
+
+  return item ? item.NetworkDifficulty : null;
+}
+
 /* =========================
    REALTIME TABLE
 ========================= */
@@ -1743,6 +1758,8 @@ async function actualizarTiempoReal() {
   try {
     const res = await fetch('/v2/data');
     const minersData = await res.json();
+    coinBlockDiffMiner = getFirstNetworkDifficulty(minersData)
+    
     renderMinerTabs(minersData['items']);
     renderRealtimeTable(minersData['items'][selectedMinerIndex]);
   } catch (e) {
@@ -2005,7 +2022,7 @@ async function cargarEstadisticasIniciales() {
   let data;
 
   try {
-    const res = await fetch('/v2//history');
+    const res = await fetch('/v2/history');
     data = await res.json();
   } catch (e) {
     console.warn("Usando datos mock para /v2/history");
@@ -2171,8 +2188,8 @@ function actualizarKPIs(filteredData, newData = false) {
 
   setTextBothStatic("kpi-last1m", "kpi-last1m-mobile", last1MTime ? formatRelativeTime(last1MTime) : "-", true);
 
-  if (coinBlockDiff) {
-      const coinBlockDiffFmt = formatSuffixNumber(coinBlockDiff, [
+  if (coinBlockDiff && coinBlockDiffMiner) {
+      const coinBlockDiffFmt = formatSuffixNumber(coinBlockDiffMiner || coinBlockDiff, [
         { min: 1e12, suffix: 'T' },
         { min: 1e9, suffix: 'G' },
         { min: 1e6, suffix: 'M' },
@@ -2779,7 +2796,7 @@ async function initDashboard() {
   setInterval(actualizarTiempoReal, REALTIME_REFRESH_MS);
   setInterval(actualizarEstadisticasIncremental, HISTORY_REFRESH_MS);
   setInterval(tickSessionStatus, 1000);
-  setInterval(getCoinDifficulty, COIN_BLOCK_DIFF_REFRESH_MS)
+  coinIntervalId = setInterval(getCoinDifficulty, COIN_BLOCK_DIFF_REFRESH_MS)
 }
 
 initDashboard();
@@ -2787,4 +2804,3 @@ initDashboard();
 
 </body>
 </html>
-
