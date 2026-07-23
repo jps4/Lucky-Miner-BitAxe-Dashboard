@@ -283,7 +283,7 @@ def data_get_miner(miner_item):
         'Shares': miner_data['shares'],
         'Hashrate': human_readable_hashrate(hashrate),
         'Current session': human_readable_timediff(miner_data['current_session']),
-        'FanSpeed': f"{human_readable_diff(fan_speed)}%",
+        'FanSpeed': f"{human_readable_diff(fanspeed)}%",
         'User': miner_info.get('stratumUser', '')
     }
 
