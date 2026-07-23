@@ -260,6 +260,7 @@ def v2_history():
 def data_get_miner(miner_item):
     miner_data = miner_item['miner_data']
     miner_info = miner_item['miner_info']
+    fan_speed = miner_item.get('fanspeed', 100.0)
 
     hashrate = calculate_hashrate(miner_data['current_shares'],
                                     miner_data['pool_diff'],
@@ -282,8 +283,8 @@ def data_get_miner(miner_item):
         'Shares': miner_data['shares'],
         'Hashrate': human_readable_hashrate(hashrate),
         'Current session': human_readable_timediff(miner_data['current_session']),
-        'FanSpeed': f"{human_readable_diff(miner_info['fanspeed'])}%",
-        'User': miner_info['stratumUser']
+        'FanSpeed': f"{human_readable_diff(fan_speed)}%",
+        'User': miner_info.get('stratumUser', '')
     }
 
     return ret
