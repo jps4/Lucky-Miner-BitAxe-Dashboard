@@ -458,7 +458,7 @@ async def listen_miner(miner, queue):
                             miner_data['shares'] += 1
                             miner_data['current_shares'] += 1
 
-                            miner_info = miner['miner_info'] = {**miner_info, **update_miner_info(url_info), "timestamp": miner_info['timestamp']}
+                        miner_info = miner['miner_info'] = {**miner_info, **update_miner_info(url_info), "timestamp": miner_info['timestamp']}
 
                         if miner_data['last_diff'] >= 10000:
                             # dt = datetime.fromtimestamp(time.time(), tz=timezone.utc)
