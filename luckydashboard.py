@@ -264,7 +264,7 @@ def data_get_miner(miner_item):
     fan_speed = miner_info.get('fanspeed', 100.0)
 
     hashrate = calculate_hashrate(miner_data['current_shares'],
-                                    miner_data['pool_diff'],
+                                    10000, #miner_data['pool_diff'],
                                     miner_data['current_pool_diff_session'])
     ret = {
         'Miner id': miner_item['id'],
@@ -330,7 +330,7 @@ def print_data(miner_data, miner_info):
     data1 += f"    Total shares: {miner_info['sharesAccepted']}"
     data1 += f"    Best diff ever: {miner_info['bestDiff']}                       \n"
 
-    hashrate = calculate_hashrate(miner_data['current_shares'], miner_data['pool_diff'], miner_data['current_pool_diff_session'])
+    hashrate = calculate_hashrate(miner_data['current_shares'], 10000, miner_data['current_pool_diff_session']) #miner_data['pool_diff'], miner_data['current_pool_diff_session'])
     data2 = f"Best diff: {human_readable_diff(miner_data['best_diff'])}"
     data2 += f"    Last diff: {human_readable_diff(miner_data['last_diff'])}"
     data2 += f"    Pool diff: {human_readable_diff(miner_data['pool_diff'])}"
@@ -454,16 +454,15 @@ async def listen_miner(miner, queue):
                             miner_data['pool_diff'] = float(found_diff.group(2))
                             miner_data['current_shares'] = 0
                             miner_data['start_time_change_pool_diff'] = time.time()
-                        if miner_data['last_diff'] > miner_data['pool_diff']:
-                            miner_data['shares'] += 1
-                            miner_data['current_shares'] += 1
+                        #if miner_data['last_diff'] > miner_data['pool_diff']:
+                        #    miner_data['shares'] += 1
+                        #    miner_data['current_shares'] += 1
 
                         miner_info = miner['miner_info'] = {**miner_info, **update_miner_info(url_info), "timestamp": miner_info['timestamp']}
 
                         if miner_data['last_diff'] >= 10000:
-                            # dt = datetime.fromtimestamp(time.time(), tz=timezone.utc)
-                            # lucky_log.write(f"{dt.strftime('%Y-%m-%dT%H:%M:%SZ')} {data['last_diff']}\n")
-                            # lucky_log.flush()
+                            miner_data['shares'] += 1
+                            miner_data['current_shares'] += 1
                             await queue.put((miner_info['timestamp'], miner_id, miner_data['last_diff']))
 
                     miner_data = miner['miner_data'] = { **miner_data, **update_session(start_time, miner_data['start_time_change_pool_diff'], miner_data['best_session'])}
