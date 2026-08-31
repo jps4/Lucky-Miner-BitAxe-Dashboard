@@ -1553,9 +1553,10 @@ async function getCoinDifficulty() {
 }
 
 function calculateBlockProbability(hashrate, timeSeconds) {
-  if (!hashrate || !coinBlockDiff || !timeSeconds) return -Infinity;
+  const diff = coinBlockDiffMiner || coinBlockDiff;
+  if (!hashrate || !diff || !timeSeconds) return -Infinity;
 
-  const hashesPerBlock = coinBlockDiff * Math.pow(2, 32);
+  const hashesPerBlock = diff * Math.pow(2, 32);
   const lambda = hashrate / hashesPerBlock;
 
   const probability = 1 - Math.exp(-lambda * timeSeconds);
@@ -2188,7 +2189,7 @@ function actualizarKPIs(filteredData, newData = false) {
 
   setTextBothStatic("kpi-last1m", "kpi-last1m-mobile", last1MTime ? formatRelativeTime(last1MTime) : "-", true);
 
-  if (coinBlockDiff && coinBlockDiffMiner) {
+  if (coinBlockDiff || coinBlockDiffMiner) {
       const coinBlockDiffFmt = formatSuffixNumber(coinBlockDiffMiner || coinBlockDiff, [
         { min: 1e12, suffix: 'T' },
         { min: 1e9, suffix: 'G' },
@@ -2780,7 +2781,7 @@ async function initDashboard() {
   setMobileView('kpis', 0);
   setupMobileSwipe();
 
-  await getCoinDifficulty();
+  //await getCoinDifficulty();
 
   initHitsTabs();
   actualizarTiempoReal();
@@ -2796,7 +2797,7 @@ async function initDashboard() {
   setInterval(actualizarTiempoReal, REALTIME_REFRESH_MS);
   setInterval(actualizarEstadisticasIncremental, HISTORY_REFRESH_MS);
   setInterval(tickSessionStatus, 1000);
-  coinIntervalId = setInterval(getCoinDifficulty, COIN_BLOCK_DIFF_REFRESH_MS)
+  //coinIntervalId = setInterval(getCoinDifficulty, COIN_BLOCK_DIFF_REFRESH_MS)
 }
 
 initDashboard();
