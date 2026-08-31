@@ -1903,7 +1903,7 @@ function renderRealtimeTable(data) {
           tdValue.classList.add("col-value-link");
         }
         if (field === "User" && value) {
-          const url = `https://bch.solo-pool.org/miner.html?wallet=${value}`
+          const url = `https://bch.solopool.org/miner/${value}`
           tr.style.cursor = "pointer";
           tr.addEventListener("click", () => {
             window.open(url, "_blank", "noopener,noreferrer");
