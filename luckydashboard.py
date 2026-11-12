@@ -459,7 +459,7 @@ async def listen_miner(miner, queue):
                         message = await asyncio.wait_for(websocket.recv(), timeout=60)
                     except asyncio.TimeoutError:
                         print(f"[{utc_now()}] [{miner_name} ({miner_id})] 60s sin mensajes -> forzando reconexión")
-                        break_
+                        break
                     miner_info['timestamp'] = int(time.time())
                     found_diff = current_diff_pattern.search(message)
                     if not found_diff:
