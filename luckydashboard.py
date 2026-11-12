@@ -17,6 +17,7 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 DEFAULT_MINER_DATA = {
     'best_session': 0.0,
     'shares': 0,
+    'shares_1k': 0,
     'current_shares': 0,
     'last_diff' : 0.0,
     'best_diff': 0.0,
@@ -35,7 +36,8 @@ DEFAULT_MINER_INFO = {
     'bestDiff': 0.0,
     'fanSpeed': 0.0,
     'user': '-',
-    'networkDifficulty': 0.0
+    'networkDifficulty': 0.0,
+    'checkHealth': False
 }
 
 MINERS = [
@@ -48,7 +50,8 @@ MINERS = [
             **DEFAULT_MINER_DATA
         },
         "miner_info": {
-            **DEFAULT_MINER_INFO
+            **DEFAULT_MINER_INFO,
+            'checkHealth': True
         }
     },
     {
@@ -263,8 +266,8 @@ def data_get_miner(miner_item):
     miner_info = miner_item['miner_info']
     fan_speed = miner_info.get('fanspeed', 100.0)
 
-    hashrate = calculate_hashrate(miner_data['current_shares'],
-                                    10000, #miner_data['pool_diff'],
+    hashrate = calculate_hashrate(miner_data['shares_1k'],
+                                    1000, #miner_data['pool_diff'],
                                     miner_data['current_pool_diff_session'])
     ret = {
         'Miner id': miner_item['id'],
@@ -330,7 +333,7 @@ def print_data(miner_data, miner_info):
     data1 += f"    Total shares: {miner_info['sharesAccepted']}"
     data1 += f"    Best diff ever: {miner_info['bestDiff']}                       \n"
 
-    hashrate = calculate_hashrate(miner_data['current_shares'], 10000, miner_data['current_pool_diff_session']) #miner_data['pool_diff'], miner_data['current_pool_diff_session'])
+    hashrate = calculate_hashrate(miner_data['shares_1k'], 1000, miner_data['current_pool_diff_session']) #miner_data['pool_diff'], miner_data['current_pool_diff_session'])
     data2 = f"Best diff: {human_readable_diff(miner_data['best_diff'])}"
     data2 += f"    Last diff: {human_readable_diff(miner_data['last_diff'])}"
     data2 += f"    Pool diff: {human_readable_diff(miner_data['pool_diff'])}"
@@ -353,8 +356,10 @@ def human_readable_hashrate(hashrate):
         return '%.2f kH/s' % (hashrate / 1000)
     if hashrate < 1000000000:
         return '%.2f MH/s' % (hashrate / 1000000)
+    if hashrate < 1000000000000:
+        return '%.2f GH/s' % (hashrate / 1000000000)
 
-    return '%.2f GH/s' % (hashrate / 1000000000)
+    return '%.2f TH/s' % (hashrate / 1000000000000)
 
 def human_readable_diff(diff):
     '''Returns a human readable representation of hashrate.'''
@@ -402,6 +407,16 @@ def update_miner_info(url: str) -> dict:
     except Exception:
         return {**DEFAULT_MINER_INFO}
 
+def check_health(miner_ip, miner_name, miner_id, miner_info, umbral_min=1.0, umbral_max=2.0):
+    power = miner_info['power']
+    if umbral_min <= power <= umbral_max:
+        print(f'Restarting {miner_name} ({miner_id}): consuming {power}!')
+        try:
+            r = requests.post(f"http://{miner_ip}/api/system/restart", timeout=5)
+            r.raise_for_status()
+        except Exception as e:
+            print(f'Error restarting {miner_name} ({miner_id}): {e}') 
+
 async def listen_miner(miner, queue):
     miner_id = miner['id']
     miner_ip = miner['ip']
@@ -419,6 +434,7 @@ async def listen_miner(miner, queue):
         miner['miner_data'] = { **miner['miner_data'],
             'current_session': 0.0,
             'current_shares': 0,
+            'shares_1k': 0,
             'pool_diff': 1000.0,
             'current_pool_diff_session': 0.0
         }
@@ -437,11 +453,13 @@ async def listen_miner(miner, queue):
                 reconnect_delay = 2
                 miner_data['start_time_change_pool_diff'] = time.time()
                 while True:
+                    if miner_info.get('checkHealth', False):
+                        check_health(miner_ip, miner_name, miner_id, miner_info)
                     try:
                         message = await asyncio.wait_for(websocket.recv(), timeout=60)
                     except asyncio.TimeoutError:
                         print(f"[{utc_now()}] [{miner_name} ({miner_id})] 60s sin mensajes -> forzando reconexión")
-                        break
+                        break_
                     miner_info['timestamp'] = int(time.time())
                     found_diff = current_diff_pattern.search(message)
                     if not found_diff:
@@ -453,6 +471,7 @@ async def listen_miner(miner, queue):
                         if float(found_diff.group(2)) != miner_data['pool_diff']:
                             miner_data['pool_diff'] = float(found_diff.group(2))
                             miner_data['current_shares'] = 0
+                            miner_data['shares_1k'] = 0
                             miner_data['start_time_change_pool_diff'] = time.time()
                         #if miner_data['last_diff'] > miner_data['pool_diff']:
                         #    miner_data['shares'] += 1
@@ -460,6 +479,8 @@ async def listen_miner(miner, queue):
 
                         miner_info = miner['miner_info'] = {**miner_info, **update_miner_info(url_info), "timestamp": miner_info['timestamp']}
 
+                        if miner_data['last_diff'] >= 1000:
+                            miner_data['shares_1k'] += 1
                         if miner_data['last_diff'] >= 10000:
                             miner_data['shares'] += 1
                             miner_data['current_shares'] += 1
